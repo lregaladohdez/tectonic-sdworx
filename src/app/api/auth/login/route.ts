@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSessionToken, SESSION_COOKIE, SESSION_TTL_SECONDS } from "@/lib/auth/session";
 import { env } from "@/lib/env";
-import { assertSameOrigin, clientIp, errorResponse, limited } from "@/lib/http/guards";
+import { assertSameOrigin, clientIp, errorResponse, limited, readJson } from "@/lib/http/guards";
 import { findUserByEmail } from "@/relay/store";
 
 const body = z.object({
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Login is not configured on this server" }, { status: 503 });
     }
 
-    const parsed = body.safeParse(await request.json().catch(() => null));
+    const parsed = body.safeParse(await readJson(request));
     if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
     const user = findUserByEmail(parsed.data.email);

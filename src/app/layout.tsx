@@ -10,6 +10,10 @@ const archivoBlack = Archivo_Black({
   subsets: ["latin"],
 });
 
+// Every response carries a per-request CSP nonce (src/proxy.ts), so nothing may be
+// prerendered at build time: this also makes the 404 page render on demand.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Relay · SD Worx",
   description: "Trust-verified client handovers for payroll consultants",

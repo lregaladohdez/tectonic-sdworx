@@ -3,7 +3,7 @@ import { z } from "zod";
 import { generateText } from "@/lib/ai/openai";
 import { generateTextWithGemini } from "@/lib/ai/google";
 import { AccessError, getCurrentUser } from "@/lib/auth/access";
-import { assertSameOrigin, errorResponse, limited } from "@/lib/http/guards";
+import { assertSameOrigin, errorResponse, limited, readJson } from "@/lib/http/guards";
 
 const body = z.object({
   topic: z.string().trim().min(1).max(500),
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const block = limited(`script:${user.id}`, 10, 60_000);
     if (block) return block;
 
-    const parsed = body.safeParse(await request.json().catch(() => null));
+    const parsed = body.safeParse(await readJson(request));
     if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
     const { topic, provider } = parsed.data;

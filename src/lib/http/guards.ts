@@ -8,11 +8,44 @@ export function assertSameOrigin(request: Request): void {
   const origin = request.headers.get("origin") ?? request.headers.get("referer");
   if (!origin) throw new AccessError(401);
   const host = request.headers.get("host");
-  if (!host || new URL(origin).host !== host) throw new AccessError(401);
+  let originHost: string;
+  try {
+    originHost = new URL(origin).host;
+  } catch {
+    // "null" or a malformed Origin is not ours.
+    throw new AccessError(401);
+  }
+  if (!host || originHost !== host) throw new AccessError(401);
 }
 
+/**
+ * The caller's address for rate limiting. Cloud Run's front end appends the real
+ * client IP as the LAST entry of X-Forwarded-For, so that is the trusted one; the
+ * first entry is whatever the client sent and must not be used.
+ */
 export function clientIp(request: Request): string {
-  return request.headers.get("x-forwarded-for")?.split(",").at(0)?.trim() || "local";
+  return request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || "local";
+}
+
+/** Largest JSON body any route accepts. Every real request here is well under 4 KB. */
+export const MAX_BODY_BYTES = 16 * 1024;
+
+/**
+ * Reads a JSON body of at most `maxBytes`. Returns null for anything that is not a
+ * small, well-formed JSON document, so a route can answer 400 without parsing
+ * arbitrarily large input. Declared length is checked first; the body is still
+ * measured after reading in case the header lies or is absent.
+ */
+export async function readJson(request: Request, maxBytes = MAX_BODY_BYTES): Promise<unknown> {
+  const declared = Number(request.headers.get("content-length") ?? 0);
+  if (Number.isFinite(declared) && declared > maxBytes) return null;
+  try {
+    const text = await request.text();
+    if (Buffer.byteLength(text) > maxBytes) return null;
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }
 
 export function tooManyRequests(retryAfterMs: number) {
@@ -28,10 +61,15 @@ export function limited(key: string, limit: number, windowMs: number) {
   return r.ok ? null : tooManyRequests(r.retryAfterMs);
 }
 
-/** Maps AccessError and validation errors to responses; rethrows the rest. */
+/**
+ * Maps AccessError to its status; everything else becomes a generic 500. The real
+ * error is logged on the server only (message, not the request), so provider
+ * failures and internal paths never reach the client.
+ */
 export function errorResponse(error: unknown) {
   if (error instanceof AccessError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
-  throw error;
+  console.error("[api]", error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+  return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
 }

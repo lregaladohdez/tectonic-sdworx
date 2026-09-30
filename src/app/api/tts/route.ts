@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { textToSpeech } from "@/lib/ai/elevenlabs";
 import { AccessError, getCurrentUser } from "@/lib/auth/access";
-import { assertSameOrigin, errorResponse, limited } from "@/lib/http/guards";
+import { assertSameOrigin, errorResponse, limited, readJson } from "@/lib/http/guards";
 
 const body = z.object({
   text: z.string().trim().min(1).max(2000),
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const block = limited(`tts:${user.id}`, 5, 60_000);
     if (block) return block;
 
-    const parsed = body.safeParse(await request.json().catch(() => null));
+    const parsed = body.safeParse(await readJson(request));
     if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
     const audio = await textToSpeech(parsed.data.text);

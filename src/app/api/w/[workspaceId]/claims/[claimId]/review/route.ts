@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireWorkspaceMember } from "@/lib/auth/access";
-import { assertSameOrigin, errorResponse, limited } from "@/lib/http/guards";
+import { assertSameOrigin, errorResponse, limited, readJson } from "@/lib/http/guards";
 import { getClaim, listPeople, setReview } from "@/relay/store";
 
 const body = z.object({
@@ -19,7 +19,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ wor
     const block = limited(`review:${user.id}`, 60, 60_000);
     if (block) return block;
 
-    const parsed = body.safeParse(await request.json().catch(() => null));
+    const parsed = body.safeParse(await readJson(request));
     if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
     // Scoped lookups: a claim or person from another workspace is simply not found.
