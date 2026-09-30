@@ -45,4 +45,5 @@ next-env.d.ts
 
 # remotion output / generated audio
 /out/
-/public/audio/*.mp3
+/public/audio/**/*.mp3
+/public/audio/scenes/*.mp3.*
