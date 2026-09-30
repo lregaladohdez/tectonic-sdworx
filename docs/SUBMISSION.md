@@ -45,7 +45,7 @@ unsupported, confirmed) into one verdict per claim.
 it; a 2023 email about delivery vans marked outdated because the CO2 reference values
 changed; the Sunday premium quote against company agreement paragraph 7, which says 100%.
 "Connect" is the ask button: the card names Els Peeters, the team's JC 118 expert, and one
-click sends her the question with both excerpts attached. Tacit knowledge with no document behind it
+click marks the claim as asked to her, with both excerpts kept on the card. Tacit knowledge with no document behind it
 is marked unsupported and routed to the person who said it.
 
 The evidence is always visible because the signal contract requires it. A result carries the
