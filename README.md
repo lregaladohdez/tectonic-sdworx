@@ -12,7 +12,7 @@ voices it with ElevenLabs, and renders the video with Remotion.
 | Concern            | Tool                                         | Where                          |
 | ------------------ | -------------------------------------------- | ------------------------------ |
 | Web app / API      | Next.js 16 (App Router, Turbopack), React 19 | `src/app`                      |
-| Styling            | Tailwind CSS v4, SD Worx palette (`brand-*`) | `src/app/globals.css`          |
+| Styling            | Tailwind CSS v4, SD Worx palette in a Memphis Milano treatment ([docs/STYLE.md](docs/STYLE.md)) | `src/app/globals.css`, `src/components/MemphisShapes.tsx` |
 | Video              | Remotion (Studio, Player, server render)     | `src/remotion`, `src/lib/video`|
 | Voices             | ElevenLabs                                   | `src/lib/ai/elevenlabs.ts`     |
 | Scripts / LLM      | OpenAI (Responses API), Google Gemini/Vertex | `src/lib/ai/openai.ts`, `google.ts` |

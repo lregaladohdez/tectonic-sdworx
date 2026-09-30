@@ -1,13 +1,20 @@
 @import "tailwindcss";
 
 /*
- * SD Worx brand palette (post June-2026 rebrand: "SD Worx makes work work").
- * Sources: sdworx.com logo SVG, website CSS bundle, and the SD Worx "Ignite"
- * design-system tokens (cdn.sdworx.com/ignite/styling/v2). The official
- * guidelines live behind login at brand.sdworx.com, so treat as best-effort.
+ * Tectonic × SD Worx — "Memphis Milano" base style.
  *
- * Usage: bg-brand-500 / text-brand-950 (blue scale), bg-accent (red),
- * bg-sun (yellow), text-ink, text-body, bg-surface-alt, border-line, etc.
+ * The palette is the SD Worx June-2026 brand (logo strokes blue #006DD8,
+ * red #F1002F, yellow #FFBE00, Inter body font). The visual language on top
+ * of it is borrowed from the Memphis Group (Milan, 1981): cream paper,
+ * black outlines, hard offset shadows, primary blocks next to pastels,
+ * confetti / dot / grid / zigzag patterns and playful asymmetry.
+ *
+ * Full guide: docs/STYLE.md
+ *
+ * Usage: bg-brand / bg-accent / bg-sun for the three brand primaries,
+ * bg-mint / bg-pink / bg-lilac / bg-sky for the Memphis pastels,
+ * bg-paper + text-ink for the base canvas, block-outline for the outlined
+ * "block" look (thick border + hard shadow), and bg-pattern-* for patterns.
  */
 @theme {
   /* Primary blue scale — brand-500 is the logo / CTA blue */
@@ -30,8 +37,16 @@
   --color-sun: #ffbe00; /* brand yellow */
   --color-magenta: #cb2f90; /* Ignite accent-12 / dataviz */
 
-  /* Neutrals (Ignite + website) */
-  --color-ink: #040d14; /* headlines */
+  /* Memphis pastels — secondary tints that sit next to the primaries */
+  --color-mint: #7fe3c5;
+  --color-pink: #ffb3c7;
+  --color-lilac: #c9b8ff;
+  --color-sky: #9ed2ff;
+  --color-cream: #fff2cc;
+
+  /* Canvas + neutrals */
+  --color-paper: #fff8ec; /* cream background, the Memphis "laminate" */
+  --color-ink: #0b0b12; /* outlines, headlines, hard shadows */
   --color-body: #303642; /* body text */
   --color-muted: #5a5b5c;
   --color-slate: #7783a0;
@@ -47,19 +62,33 @@
   --color-danger: #e90040;
   --color-info: #006aff;
 
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 8px;
+  /* Memphis mixes sharp corners with full pills; nothing in between */
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+  --radius-pill: 9999px;
+
+  /* Hard, un-blurred offset shadows */
+  --shadow-block: 6px 6px 0 0 var(--color-ink);
+  --shadow-block-sm: 3px 3px 0 0 var(--color-ink);
+  --shadow-block-lg: 10px 10px 0 0 var(--color-ink);
+  --shadow-block-brand: 6px 6px 0 0 var(--color-brand);
+  --shadow-block-accent: 6px 6px 0 0 var(--color-accent);
+  --shadow-block-sun: 6px 6px 0 0 var(--color-sun);
+  --shadow-block-lg-accent: 12px 12px 0 0 var(--color-accent);
+  --shadow-block-lg-brand: 12px 12px 0 0 var(--color-brand);
 }
 
 @theme inline {
-  /* SD Worx Display is a licensed font; Inter is their body font and free. */
+  /* SD Worx Display is licensed; Inter (their body font) stays for text.
+   * Archivo Black gives the chunky geometric headline Memphis posters used. */
   --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    var(--font-archivo-black), "Archivo Black", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: Consolas, ui-monospace, monospace;
 }
 
-/* Brand gradients lifted from sdworx.com */
+/* --- Brand gradients (kept from sdworx.com; use sparingly in Memphis mode) --- */
 @utility bg-brand-gradient {
   background: linear-gradient(265deg, #38a1ff -2.8%, #006dd8 93.2%);
 }
@@ -73,8 +102,87 @@
   color: transparent;
 }
 
+/* --- Memphis surface patterns ------------------------------------------ */
+/* Sparse polka dots on paper (the default page background) */
+@utility bg-pattern-dots {
+  background-color: var(--color-paper);
+  background-image: radial-gradient(var(--color-ink) 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+/* Dense dots in the current text colour, for shapes and chips */
+@utility bg-pattern-dots-dense {
+  background-image: radial-gradient(currentColor 1.6px, transparent 1.8px);
+  background-size: 10px 10px;
+}
+/* Fine grid in the current text colour (stand-in for Sottsass' Bacterio) */
+@utility bg-pattern-grid {
+  background-image:
+    linear-gradient(currentColor 1.5px, transparent 1.5px),
+    linear-gradient(90deg, currentColor 1.5px, transparent 1.5px);
+  background-size: 14px 14px;
+}
+/* Diagonal candy stripes in the current text colour */
+@utility bg-pattern-stripes {
+  background-image: repeating-linear-gradient(-45deg, currentColor 0 6px, transparent 6px 14px);
+}
+/* Confetti / terrazzo made of the three brand colours plus ink */
+@utility bg-pattern-confetti {
+  background-image:
+    radial-gradient(var(--color-brand) 2.5px, transparent 3px),
+    radial-gradient(var(--color-accent) 2.5px, transparent 3px),
+    radial-gradient(var(--color-sun) 2.5px, transparent 3px),
+    radial-gradient(var(--color-ink) 1.5px, transparent 2px);
+  background-size:
+    48px 48px,
+    56px 56px,
+    40px 40px,
+    30px 30px;
+  background-position:
+    0 0,
+    20px 30px,
+    10px 10px,
+    5px 20px;
+}
+
+/* --- Memphis building blocks ------------------------------------------ */
+/* The outlined block: thick ink border + hard shadow. Combine with bg-* */
+@utility block-outline {
+  border: 3px solid var(--color-ink);
+  box-shadow: var(--shadow-block);
+}
+/* Chunky display text: Archivo Black, uppercase, tight */
+@utility text-display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+}
+/* Solid text outline for headlines sitting on patterns */
+@utility text-outline-ink {
+  -webkit-text-stroke: 1.5px var(--color-ink);
+  paint-order: stroke fill;
+}
+
+html {
+  color-scheme: light;
+}
+
 body {
-  background: var(--color-surface);
+  background: var(--color-paper);
   color: var(--color-body);
   font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-sun);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

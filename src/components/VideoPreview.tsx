@@ -16,7 +16,7 @@ export function VideoPreview(props: Partial<PromoVideoProps>) {
       controls
       autoPlay
       loop
-      style={{ width: "100%", borderRadius: 16, overflow: "hidden" }}
+      style={{ width: "100%", border: "3px solid #0b0b12", overflow: "hidden" }}
     />
   );
 }
