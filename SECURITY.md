@@ -22,7 +22,7 @@ acting as a signed-in user. Everything below exists to close those three.
 | Rate limits per user on provider routes (script, tts, render) and on reviews | `src/lib/http/guards.ts` |
 | Provider keys: server-only modules, never `NEXT_PUBLIC_`, loaded through a validated env schema | `src/lib/env.ts`, `src/lib/ai/*` |
 | Generated audio is streamed back to the caller, never written under `public/` | `src/app/api/tts/route.ts` |
-| Security headers: CSP, `X-Frame-Options: DENY`, `nosniff`, referrer policy | `next.config.ts` |
+| Security headers: CSP, HSTS (2 years, production only), `X-Frame-Options: DENY`, `nosniff`, referrer and permissions policy | `next.config.ts` |
 | Dependencies: Aikido GitHub App check on every PR, `npm audit --audit-level=high` in the pipeline, Dependabot weekly; deploys only run after the pipeline passes | `.github/workflows/pipeline.yml` |
 
 Verified by hand with curl on 2026-09-30: unauthenticated board → 307 to login; cross-origin
@@ -38,7 +38,7 @@ consolidation logic (`npm test`).
   instance keeps its own counters, so with `--max-instances=3` the effective login limit is up
   to 15 attempts per IP per minute, still far too slow for guessing a random passcode.
 - The Cloud Run demo is reachable by anyone (`allUsers` invoker); the app's own login is the
-  only gate. No HSTS header yet: `*.run.app` is HTTPS-only, so add it before a custom domain.
+  only gate.
 - The Remotion render route writes MP4 files to the server's `out/` directory; they are not
   served, but they are not cleaned up either.
 - `script-src` allows `'unsafe-inline'` because Next injects inline scripts; nonces are the

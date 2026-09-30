@@ -171,7 +171,7 @@ and the login endpoint. Everything else needs the signed session cookie: pages r
 `/login`, every API route answers 401 without a session and 401 to cross-origin POSTs, the
 provider routes (script, tts, render) are rate-limited per user, login is limited to 5
 attempts per IP per minute with constant-time passcode comparison, and the container runs as
-a non-root user with CSP, `X-Frame-Options: DENY` and `nosniff` on every response. Verified
+a non-root user with CSP, HSTS, `X-Frame-Options: DENY` and `nosniff` on every response. Verified
 against the public URL on 30 Sep 2026 (see [SECURITY.md](SECURITY.md)). Spend is capped by
 `--max-instances=3`; the pipeline never changes the invoker binding, so a redeploy keeps it.
 To close it again, run the same command with `remove-iam-policy-binding`.
