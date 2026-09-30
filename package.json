@@ -18,7 +18,9 @@
     "relay:board": "NODE_OPTIONS=--conditions=react-server tsx --env-file-if-exists=.env.local scripts/relay-board.ts",
     "voice:samples": "tsx --env-file=.env.local scripts/voice-samples.ts",
     "voice:scenes": "tsx --env-file=.env.local scripts/voice-scenes.ts",
-    "music:bed": "tsx --env-file=.env.local scripts/music-bed.ts"
+    "music:bed": "tsx --env-file=.env.local scripts/music-bed.ts",
+    "video:record": "tsx --env-file=.env.local scripts/video-record.ts",
+    "video:render": "tsx scripts/video-render.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.65.0",
