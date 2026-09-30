@@ -2,28 +2,37 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { generateText } from "@/lib/ai/openai";
 import { generateTextWithGemini } from "@/lib/ai/google";
+import { AccessError, getCurrentUser } from "@/lib/auth/access";
+import { assertSameOrigin, errorResponse, limited } from "@/lib/http/guards";
 
 const body = z.object({
-  topic: z.string().min(1),
-  provider: z.enum(["openai", "google"]).default("openai"),
+  topic: z.string().trim().min(1).max(500),
+  provider: z.enum(["openai", "google"]).default("google"),
 });
 
 const INSTRUCTIONS =
-  "You write short, upbeat voice-over scripts (max 60 words) for an SD Worx HR & payroll product video. Plain prose, no stage directions.";
+  "You write short, upbeat voice-over scripts (max 60 words) for an SD Worx HR & payroll briefing video. Plain prose, no stage directions.";
 
-/** POST { topic, provider? } → { script } */
+/** POST { topic, provider? } → { script }. Signed-in users only. */
 export async function POST(request: Request) {
-  const parsed = body.safeParse(await request.json());
-  if (!parsed.success) {
-    return NextResponse.json({ error: z.prettifyError(parsed.error) }, { status: 400 });
+  try {
+    assertSameOrigin(request);
+    const user = await getCurrentUser();
+    if (!user) throw new AccessError(401);
+    const block = limited(`script:${user.id}`, 10, 60_000);
+    if (block) return block;
+
+    const parsed = body.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+    const { topic, provider } = parsed.data;
+    const prompt = `Write the voice-over for a video about: ${topic}`;
+    const script =
+      provider === "google"
+        ? await generateTextWithGemini(prompt, INSTRUCTIONS)
+        : await generateText(prompt, INSTRUCTIONS);
+    return NextResponse.json({ script, provider });
+  } catch (error) {
+    return errorResponse(error);
   }
-  const { topic, provider } = parsed.data;
-  const prompt = `Write the voice-over for a video about: ${topic}`;
-
-  const script =
-    provider === "google"
-      ? await generateTextWithGemini(prompt, INSTRUCTIONS)
-      : await generateText(prompt, INSTRUCTIONS);
-
-  return NextResponse.json({ script, provider });
 }

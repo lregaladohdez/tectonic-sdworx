@@ -35,10 +35,9 @@ export async function requireWorkspaceMember(workspaceId: string): Promise<{ use
 
 /** For pages. Redirects to /login without a session, 404s for non-members. */
 export async function requireWorkspacePage(workspaceId: string): Promise<{ user: User; workspace: Workspace }> {
-  try {
-    return await requireWorkspaceMember(workspaceId);
-  } catch (e) {
-    if (e instanceof AccessError && e.status === 401) redirect("/login");
-    notFound();
-  }
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  const workspace = getWorkspace(workspaceId);
+  if (!workspace || !isMember(user, workspaceId)) notFound();
+  return { user, workspace };
 }

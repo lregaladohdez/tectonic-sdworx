@@ -10,8 +10,8 @@ const archivoBlack = Archivo_Black({
 });
 
 export const metadata: Metadata = {
-  title: "Tectonic × SD Worx",
-  description: "AI-generated video with Remotion, ElevenLabs, OpenAI and Google Gemini",
+  title: "Relay · SD Worx",
+  description: "Trust-verified client handovers for payroll consultants",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

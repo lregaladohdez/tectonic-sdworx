@@ -29,7 +29,11 @@ let cached: Env | undefined;
 /** Parsed, validated environment. Lazy so `next build` works without keys. */
 export function env(): Env {
   if (!cached) {
-    const result = schema.safeParse(process.env);
+    // Empty values (KEY=) count as unset.
+    const present = Object.fromEntries(
+      Object.entries(process.env).filter(([, v]) => typeof v === "string" && v.trim() !== ""),
+    );
+    const result = schema.safeParse(present);
     if (!result.success) {
       throw new Error(`Invalid environment: ${z.prettifyError(result.error)}`);
     }
