@@ -14,6 +14,12 @@ const schema = z.object({
   GOOGLE_CLOUD_PROJECT: optional,
   GOOGLE_CLOUD_LOCATION: z.string().default("europe-west1"),
   GOOGLE_MODEL: z.string().default("gemini-2.5-flash"),
+  GOOGLE_EMBEDDING_MODEL: z.string().default("gemini-embedding-001"),
+
+  /** Signs the session cookie. Required to log in. */
+  SESSION_SECRET: optional,
+  /** Shared passcode for the seeded demo users. Required to log in. */
+  RELAY_DEMO_PASSCODE: optional,
 });
 
 export type Env = z.infer<typeof schema>;

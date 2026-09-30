@@ -13,7 +13,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "remotion:studio": "remotion studio",
     "remotion:render": "remotion render PromoVideo out/PromoVideo.mp4",
-    "remotion:upgrade": "remotion upgrade"
+    "remotion:upgrade": "remotion upgrade",
+    "test": "vitest run",
+    "relay:board": "NODE_OPTIONS=--conditions=react-server tsx scripts/relay-board.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.65.0",
@@ -40,7 +42,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.13",
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   },
   "overrides": {
     "brace-expansion@1": "1.1.21",
