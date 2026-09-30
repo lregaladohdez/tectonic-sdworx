@@ -5,6 +5,9 @@ const optional = z.string().trim().min(1).optional();
 const schema = z.object({
   OPENAI_API_KEY: optional,
   OPENAI_MODEL: z.string().default("gpt-5"),
+  OPENAI_EMBEDDING_MODEL: z.string().default("text-embedding-3-small"),
+  /** Which provider to try first for signals; the other is the fallback. */
+  LLM_PROVIDER: z.enum(["google", "openai"]).default("google"),
 
   ELEVENLABS_API_KEY: optional,
   ELEVENLABS_VOICE_ID: z.string().default("21m00Tcm4TlvDq8ikWAM"),
