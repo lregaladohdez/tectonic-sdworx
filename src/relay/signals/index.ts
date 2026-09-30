@@ -4,8 +4,9 @@
 import { registerSignal, listSignals } from "../registry";
 import { documentFreshness } from "./document-freshness";
 import { expertLocator } from "./expert-locator";
+import { regulationWatch } from "./regulation-watch";
 
-const ALL = [documentFreshness, expertLocator];
+const ALL = [documentFreshness, expertLocator, regulationWatch];
 
 export function registerAllSignals(): void {
   if (listSignals().length > 0) return;
