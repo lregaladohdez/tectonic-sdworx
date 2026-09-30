@@ -38,23 +38,36 @@ first draft (510 words) rendered at 3:14, so do not add words without re-measuri
 
 Each scene depends on something. Status as of 30 Sep 2026:
 
-- Scene 1, 2, 9: title cards and the knowledge montage. `DemoVideo` in Remotion
-  (`src/remotion/compositions/DemoVideo.tsx`), same shapes and fonts as `PromoVideo`. **Exists.**
+- Scene 1, 2, 9: title cards, the transcript line and the knowledge montage. `DemoVideo` in
+  Remotion (`src/remotion/compositions/DemoVideo.tsx`, timings in `DemoVideo.schema.ts`), same
+  shapes and fonts as `PromoVideo`. **Exists.**
 - Scene 3, 4: the workspace page (`/w/ws-demo`) and the claim board
   (`/w/ws-demo/clients/cl-janssens`), seeded from `src/relay/fixtures/demo-workspace.ts`. **Exists.**
+  The board is a single column of cards; there is no transcript pane on the left.
 - Scene 4 (13th month), 5 (meal vouchers), 7 (vans): `document-freshness` and `document-evidence`
-  signals (`src/relay/signals/`). **Exists.**
+  signals (`src/relay/signals/`). **Exists.** The meal-voucher card shows both arrangements inside
+  the freshness signal; there is no separate *Review* button, the summary line carries the ask.
 - Scene 6 (Sunday premium contradiction, ask Els): `document-evidence` (LLM, OpenAI with a Google
-  fallback) plus `expert-locator` using `Person.topics`; the "Ask Els Peeters" button on the card. **Exists.**
+  fallback) plus `expert-locator` using `Person.topics`; the "Ask Els Peeters" button sits on the
+  *shop staff fall under JC 118* card, which is the one the recording clicks. **Exists.**
 - Scene 7 (WhatsApp, unsupported): the unsupported verdict and the "Ask Nadia Haddad" action, which
   routes the claim to the person who said it. **Exists.** There is no "capture as a note" action.
-- Scene 8: real code (`src/relay/types.ts`, `src/relay/signals/`). Aikido screenshots: **pending**.
-  The render shows `public/aikido/before.png` and `after.png` when `docs/aikido/*.png` exist at
-  build time, otherwise labelled placeholder panels.
+- Scene 8: real code (`src/relay/types.ts`, `src/relay/signals/`), typed out as styled cards over a
+  faint shot of the board. Aikido screenshots: **pending**. `npm run video:record` and
+  `npm run video:render` copy `docs/aikido/before.png` and `after.png` to `public/aikido/` when they
+  exist; the composition checks for them at render time and otherwise shows labelled placeholder
+  panels ("Audit screenshot: before / after"). Drop the two PNGs in `docs/aikido/` and re-render.
 - Scene 9: the review states (*accepted*, *asked*) from `ClaimReview`, set with the Accept / Ask
-  buttons on the board, and the Verified client brief page. **Exists.**
-- Footage: `npm run video:record` drives the app with Playwright and writes `public/video/scene-N.mp4`
-  (not committed). `npm run video:render` produces `out/relay-demo.mp4`.
+  buttons on the board, and the Verified client brief page. **Exists.** The recording accepts the
+  three confirmed claims and opens the brief; the closing card cuts in at "Find it."
+- Footage: `npm run video:record` (needs the production build on port 3002 and
+  `RELAY_DEMO_PASSCODE` in `.env.local`) drives the app with Playwright at 125% zoom, with a drawn
+  pointer, and writes `public/video/scene-N.mp4` (not committed). It logs in once, resets the demo
+  reviews and warms the board (first assessment takes about 10 s) before recording.
+  `npm run video:render` produces `out/relay-demo.mp4` (1920×1080, 30 fps, about 2:47).
+- Narration: `public/audio/scenes/scene-N.mp3` (George). After a re-voice, update
+  `NARRATION_SECONDS` in `DemoVideo.schema.ts` from the ffprobe durations: the scene lengths, the
+  music ducking and the recording lengths are all derived from it.
 
 ## Recording notes
 

@@ -299,7 +299,7 @@ const Scene2 = () => {
 
       {/* The four places knowledge lives */}
       <AbsoluteFill className="items-center justify-center" style={{ opacity: cardsOut }}>
-        <p className="text-4xl font-semibold" style={{ color: "#303642", transform: `translateY(-260px)` }}>
+        <p className="text-4xl font-semibold" style={{ color: "#303642", transform: "translateY(-48px)" }}>
           Where the team’s knowledge lives
         </p>
         <div className="flex gap-12" style={{ transform: "translateY(20px)" }}>
@@ -424,7 +424,8 @@ const TRUST_SIGNAL: Tok[][] = [
   [["  evaluate(claims: "], ["Claim", TY], ["[], ctx: "], ["SignalContext", TY], ["): "], ["Promise", TY], ["<"], ["SignalResult", TY], ["[]>;"]],
   [["}"]],
   [[""]],
-  [["export type ", KW], ["Verdict", TY], [" = "], ["\"confirmed\"", ST], [" | "], ["\"contradicted\"", ST], [" | "], ["\"outdated\"", ST], [" | "], ["\"expiring\"", ST], [" | "], ["\"unsupported\"", ST], [";"]],
+  [["export type ", KW], ["Verdict", TY], [" ="]],
+  [["  | "], ["\"confirmed\"", ST], [" | "], ["\"contradicted\"", ST], [" | "], ["\"outdated\"", ST], [" | "], ["\"expiring\"", ST], [" | "], ["\"unsupported\"", ST], [";"]],
 ];
 
 const CodeCard = () => {
@@ -464,7 +465,7 @@ const CodeCard = () => {
 };
 
 const SIGNALS = [
-  { name: "document-freshness/", note: "deterministic: dates, supersedes, 36-month threshold. No model.", fill: "#fff2cc" },
+  { name: "document-freshness/", note: "deterministic: dates, supersedes, 18/30-month thresholds. No model.", fill: "#fff2cc" },
   { name: "document-evidence/", note: "LLM verdicts, only kept when they return supporting quotes.", fill: "#9ed2ff" },
   { name: "expert-locator/", note: "who owns the topic, from Person.topics and jurisdictions.", fill: "#c9b8ff" },
   { name: "regulation-watch/", note: "official notices, each with its source link.", fill: "#ffb3c7" },
@@ -596,17 +597,17 @@ const ClosingCard = ({ repoUrl }: Pick<DemoVideoProps, "repoUrl">) => {
     <AbsoluteFill className="bg-pattern-dots text-ink">
       <CornerShapes />
       <AbsoluteFill className="items-center justify-center">
-        <p className="text-5xl font-semibold" style={{ opacity: slide(0), transform: "translateY(-30px)" }}>
+        <p className="text-5xl font-semibold" style={{ opacity: slide(0), transform: "translateY(-16px)" }}>
           Relay
         </p>
-        <div className="mt-6 flex items-center gap-12">
+        <div className="mt-4 flex flex-col items-center gap-7">
           {CLOSING.map((c) => {
             const at = sec(c.at);
             const v = pop(at);
             return (
               <div
                 key={c.text}
-                className="px-12 py-5"
+                className="px-12 py-4"
                 style={{
                   background: c.bg,
                   color: c.fg,
@@ -615,7 +616,7 @@ const ClosingCard = ({ repoUrl }: Pick<DemoVideoProps, "repoUrl">) => {
                   transform: `rotate(${c.rotate}deg) scale(${v})`,
                   opacity: frame < at ? 0 : 1,
                   fontFamily: archivoBlack.fontFamily,
-                  fontSize: 92,
+                  fontSize: 76,
                   lineHeight: 1,
                   textTransform: "uppercase",
                   whiteSpace: "nowrap",
@@ -626,9 +627,9 @@ const ClosingCard = ({ repoUrl }: Pick<DemoVideoProps, "repoUrl">) => {
             );
           })}
         </div>
-        <Squiggle className="mt-20 w-72" stroke="#ffbe00" style={{ opacity: urlIn, transform: `scaleX(${urlIn})` }} />
+        <Squiggle className="mt-12 w-72" stroke="#ffbe00" style={{ opacity: urlIn, transform: `scaleX(${urlIn})` }} />
         <p
-          className="mt-8 bg-paper px-6 py-2 text-4xl font-semibold"
+          className="mt-6 bg-paper px-6 py-2 text-4xl font-semibold"
           style={{ border: `4px solid ${INK}`, boxShadow: `8px 8px 0 0 ${INK}`, opacity: urlIn, transform: `translateY(${(1 - urlIn) * 20}px)` }}
         >
           {repoUrl}
