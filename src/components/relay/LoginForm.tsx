@@ -36,7 +36,7 @@ export function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="username"
           required
-          className="rounded-md border border-line px-3 py-2 font-normal text-body outline-none focus:border-brand"
+          className="rounded-md border border-line bg-surface px-3 py-2 font-normal text-body outline-none focus:border-brand"
         />
       </label>
       <label className="flex flex-col gap-1 text-sm font-medium text-ink">
@@ -47,7 +47,7 @@ export function LoginForm() {
           onChange={(e) => setPasscode(e.target.value)}
           autoComplete="current-password"
           required
-          className="rounded-md border border-line px-3 py-2 font-normal text-body outline-none focus:border-brand"
+          className="rounded-md border border-line bg-surface px-3 py-2 font-normal text-body outline-none focus:border-brand"
         />
       </label>
       {error ? <p className="text-sm text-danger">{error}</p> : null}

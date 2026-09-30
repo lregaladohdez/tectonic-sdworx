@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo_Black, Inter } from "next/font/google";
 import "./globals.css";
+import { ShaderBackground } from "@/components/ShaderBackground";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const archivoBlack = Archivo_Black({
@@ -17,7 +18,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} ${archivoBlack.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-pattern-dots">{children}</body>
+      <body className="flex min-h-full flex-col bg-paper">
+        <ShaderBackground />
+        {children}
+      </body>
     </html>
   );
 }

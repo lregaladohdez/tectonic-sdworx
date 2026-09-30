@@ -71,6 +71,22 @@ sets font, uppercase, tight tracking and 0.95 line height in one class.
 Patterns that use `currentColor` take their colour from `text-*`, so
 `<div class="bg-lilac text-ink bg-pattern-dots-dense">` is lilac with ink dots.
 
+## Background
+
+[`src/components/ShaderBackground.tsx`](../src/components/ShaderBackground.tsx) is mounted
+once in `layout.tsx`. It is a fixed WebGL canvas behind the page that paints soft pastel
+**gradient blobs** on the paper. Three blobs (sky, mint, lilac) trail the pointer with
+increasing lag, and a pink one roams on its own so the page still breathes on touch or when
+the pointer is idle. Colours are read from the CSS tokens at runtime, so changing the
+palette in `globals.css` changes the shader too.
+
+Rules: the app pages use plain `bg-paper` under it, not `bg-pattern-dots`, because dots
+behind body text hurt contrast (patterns stay for the landing page and the video). It never
+uses the three primaries, peak opacity stays at 70%, and page surfaces sit on top of it.
+Cards and inputs that need to be read get `bg-surface`; full-page flat fills
+(`bg-surface-alt` on a wrapper) would hide it. Without WebGL nothing is drawn and the paper
+stays; with `prefers-reduced-motion` it renders one static frame.
+
 ## Shapes
 
 [`src/components/MemphisShapes.tsx`](../src/components/MemphisShapes.tsx) exports plain
@@ -119,6 +135,7 @@ Fill comes from `currentColor` (`text-sun`), the outline from the `stroke` prop
 | Tokens, patterns, utilities   | `src/app/globals.css`                                  |
 | Fonts                         | `src/app/layout.tsx` (Inter + Archivo Black via `next/font`) |
 | Shape library                 | `src/components/MemphisShapes.tsx`                     |
+| Background shader             | `src/components/ShaderBackground.tsx`                  |
 | Landing page                  | `src/app/page.tsx`                                     |
 | Player frame                  | `src/components/VideoPreview.tsx`                      |
 | Video composition             | `src/remotion/compositions/PromoVideo.tsx`             |
