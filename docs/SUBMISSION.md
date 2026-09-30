@@ -1,7 +1,7 @@
 # Builderbase submission sheet
 
 Copy-paste source for the Builderbase form. Tectonic Hackathon, SD Worx track, 30 Sep 2026.
-Replace `VIDEO_URL_TBD` with the YouTube link once the video is uploaded.
+The demo video is on YouTube: https://youtu.be/eWgWXcniSg0
 
 ## Project name
 
@@ -88,7 +88,7 @@ login. The passcode is shared with the jury separately and is not in the reposit
 | --- | --- |
 | Public repository | <https://github.com/lregaladohdez/tectonic-sdworx> |
 | Live demo (Cloud Run, europe-west1) | <https://tectonic-sdworx-970554784378.europe-west1.run.app> |
-| Demo video (under 3 minutes) | VIDEO_URL_TBD |
+| Demo video (under 3 minutes) | https://youtu.be/eWgWXcniSg0 |
 | README | [README.md](../README.md) |
 | Security controls and known gaps | [SECURITY.md](../SECURITY.md) |
 | How the signals work | [signals.md](signals.md) |
@@ -108,7 +108,7 @@ not exist yet.
 
 ## Pre-submission checklist
 
-- [ ] Demo video is under 3:00, uploaded, and the link replaces every `VIDEO_URL_TBD` (`grep -r VIDEO_URL_TBD .`).
+- [x] Demo video is under 3:00 and uploaded: https://youtu.be/eWgWXcniSg0 (linked in README.md and above).
 - [ ] `docs/aikido/before.png` and `docs/aikido/after.png` are committed and show the repo name and the findings.
 - [ ] Aikido findings are fixed or documented and marked resolved; the after run is the latest run.
 - [ ] README.md is current: run commands, counts, links, unfinished list.

@@ -19,7 +19,7 @@ passage, a regulation or a person. Accepted claims become the **verified client 
 | What | Where |
 | --- | --- |
 | Live demo | <https://tectonic-sdworx-970554784378.europe-west1.run.app>, sign in as `incoming@relay.demo` (passcode shared with the jury separately) |
-| Demo video (under 3 minutes) | VIDEO_URL_TBD |
+| Demo video (under 3 minutes) | https://youtu.be/eWgWXcniSg0 |
 | Repository | <https://github.com/lregaladohdez/tectonic-sdworx> |
 | Builderbase copy sheet | [docs/SUBMISSION.md](docs/SUBMISSION.md) |
 
