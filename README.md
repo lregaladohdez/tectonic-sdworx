@@ -157,14 +157,24 @@ gcloud run deploy tectonic-sdworx --region=$REGION --image=$IMAGE \
   --no-allow-unauthenticated --memory=4Gi --cpu=2 --timeout=600 --concurrency=4
 ```
 
-The service starts private: only Google identities with `roles/run.invoker` can call it
+A fresh deploy starts private: only Google identities with `roles/run.invoker` can call it
 (test with `curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" <url>`).
-To open it to the public for a demo:
+The demo deployment above is **public**, opened once with:
 
 ```bash
 gcloud run services add-iam-policy-binding tectonic-sdworx --region=$REGION \
   --member=allUsers --role=roles/run.invoker
 ```
+
+Why public is acceptable here: the anonymous surface is the landing redirect, the login page
+and the login endpoint. Everything else needs the signed session cookie: pages redirect to
+`/login`, every API route answers 401 without a session and 401 to cross-origin POSTs, the
+provider routes (script, tts, render) are rate-limited per user, login is limited to 5
+attempts per IP per minute with constant-time passcode comparison, and the container runs as
+a non-root user with CSP, `X-Frame-Options: DENY` and `nosniff` on every response. Verified
+against the public URL on 30 Sep 2026 (see [SECURITY.md](SECURITY.md)). Spend is capped by
+`--max-instances=3`; the pipeline never changes the invoker binding, so a redeploy keeps it.
+To close it again, run the same command with `remove-iam-policy-binding`.
 
 Secrets never go in the image, the repo, or plain env vars. Login needs `SESSION_SECRET`
 and `RELAY_DEMO_PASSCODE`; the providers need their keys. Put them in Secret Manager and

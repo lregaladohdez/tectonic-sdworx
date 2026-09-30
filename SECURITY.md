@@ -34,7 +34,11 @@ consolidation logic (`npm test`).
 ## Known gaps (hackathon scope)
 
 - Single shared passcode for the demo users instead of per-user credentials or SSO.
-- In-memory store and rate limiter: one process, state resets on restart.
+- In-memory store and rate limiter: one process, state resets on restart. On Cloud Run each
+  instance keeps its own counters, so with `--max-instances=3` the effective login limit is up
+  to 15 attempts per IP per minute, still far too slow for guessing a random passcode.
+- The Cloud Run demo is reachable by anyone (`allUsers` invoker); the app's own login is the
+  only gate. No HSTS header yet: `*.run.app` is HTTPS-only, so add it before a custom domain.
 - The Remotion render route writes MP4 files to the server's `out/` directory; they are not
   served, but they are not cleaned up either.
 - `script-src` allows `'unsafe-inline'` because Next injects inline scripts; nonces are the
