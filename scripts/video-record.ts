@@ -1,5 +1,6 @@
 /**
- * Records the app footage for the submission demo (docs/VIDEO_SCRIPT.md, scenes 3 to 9).
+ * Dev-only tooling, never part of the server: records the app footage for the
+ * submission demo (docs/VIDEO_SCRIPT.md, scenes 3 to 9).
  *
  *   npm run video:record            # all footage scenes
  *   npm run video:record -- 6 9     # only scenes 6 and 9
@@ -11,6 +12,12 @@
  *
  * The page is shown at 125% zoom so card text is readable at video scale. Review state
  * on the demo claims is reset first, so a re-run starts from a clean board.
+ *
+ * File access is deliberately narrow: every file read or written is a fixed name
+ * (`scene-<n>.webm` / `.mp4` with n from FOOTAGE_SCENES, `storage-state.json`) inside
+ * the fixed public/video directory, checked by `fileUnder`. Scene numbers from the
+ * command line are only used to pick entries of FOOTAGE_SCENES, never to build a path.
+ * The Playwright cache lookup only accepts directory names matching `chromium-<digits>`.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, renameSync, unlinkSync } from "node:fs";
@@ -26,6 +33,7 @@ import {
   SCENE_TAIL_SECONDS,
 } from "../src/remotion/compositions/DemoVideo.schema";
 import { syncAikidoShots } from "./aikido-shots";
+import { fileUnder, isDirectlyUnder } from "./safe-path";
 
 const BASE = (process.env.RELAY_URL ?? "http://localhost:3002").replace(/\/$/, "");
 const EMAIL = "incoming@relay.demo";
@@ -34,8 +42,18 @@ const CLIENT = "cl-janssens";
 const CLAIM_IDS = ["c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8"];
 const ZOOM = 1.25;
 const OUT = path.join(process.cwd(), "public", "video");
-const STATE = path.join(OUT, "storage-state.json");
+const STATE = fileUnder(OUT, "storage-state.json");
 const FFMPEG = process.env.FFMPEG ?? "/opt/homebrew/bin/ffmpeg";
+if (!path.isAbsolute(FFMPEG)) throw new Error("FFMPEG must be an absolute path to the ffmpeg binary");
+
+type Scene = (typeof FOOTAGE_SCENES)[number];
+const isScene = (n: number): n is Scene => (FOOTAGE_SCENES as readonly number[]).includes(n);
+
+/** public/video/scene-<n>.<ext> for a known scene number only. */
+function sceneFile(n: Scene, ext: "webm" | "mp4"): string {
+  if (!isScene(n) || !Number.isInteger(n) || n < 1 || n > 99) throw new Error(`Unknown scene ${n}`);
+  return fileUnder(OUT, `scene-${n}.${ext}`);
+}
 
 const PATHS = {
   login: `${BASE}/login`,
@@ -44,15 +62,32 @@ const PATHS = {
   brief: `${BASE}/w/${WORKSPACE}/clients/${CLIENT}/brief`,
 };
 
+/**
+ * The Playwright-managed Chromium binary. CHROMIUM_PATH (absolute) overrides the lookup
+ * and is handed to Playwright as the executable, never read here. The cache scan only
+ * accepts directory names of the exact form `chromium-<digits>` under the fixed cache
+ * directory, and every candidate is resolved and checked to stay inside it.
+ */
 function chromiumPath(): string {
-  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
+  const override = process.env.CHROMIUM_PATH;
+  if (override) {
+    if (!path.isAbsolute(override)) throw new Error("CHROMIUM_PATH must be an absolute path");
+    return override;
+  }
   const cache = path.join(os.homedir(), "Library", "Caches", "ms-playwright");
-  const dirs = existsSync(cache) ? readdirSync(cache).filter((d) => /^chromium-\d+$/.test(d)).sort() : [];
+  const dirs = existsSync(cache)
+    ? readdirSync(cache)
+        .map((d) => path.basename(d))
+        .filter((d) => /^chromium-\d{1,8}$/.test(d))
+        .sort()
+    : [];
   for (const dir of dirs.reverse()) {
-    for (const app of ["Google Chrome for Testing", "Chromium"]) {
-      for (const arch of ["chrome-mac-arm64", "chrome-mac"]) {
-        const bin = path.join(cache, dir, arch, `${app}.app`, "Contents", "MacOS", app);
-        if (existsSync(bin)) return bin;
+    const dirPath = path.resolve(cache, dir);
+    if (!isDirectlyUnder(cache, dirPath)) continue;
+    for (const app of ["Google Chrome for Testing", "Chromium"] as const) {
+      for (const arch of ["chrome-mac-arm64", "chrome-mac"] as const) {
+        const bin = path.resolve(dirPath, arch, `${app}.app`, "Contents", "MacOS", app);
+        if (bin.startsWith(dirPath + path.sep) && existsSync(bin)) return bin;
       }
     }
   }
@@ -337,7 +372,7 @@ const SCENES: Record<(typeof FOOTAGE_SCENES)[number], { start: string; run: Scen
   },
 };
 
-async function record(browser: Awaited<ReturnType<typeof chromium.launch>>, n: (typeof FOOTAGE_SCENES)[number]) {
+async function record(browser: Awaited<ReturnType<typeof chromium.launch>>, n: Scene) {
   const scene = SCENES[n];
   const seconds = SCENE_HEAD_SECONDS + NARRATION_SECONDS[n]! + SCENE_TAIL_SECONDS + 3;
   const ctx: BrowserContext = await browser.newContext({
@@ -358,12 +393,14 @@ async function record(browser: Awaited<ReturnType<typeof chromium.launch>>, n: (
   await t.at(seconds);
   const video = page.video();
   await ctx.close();
+  // Playwright writes the recording under OUT with a name of its own; accept it only from there.
   const webm = await video!.path();
-  const target = path.join(OUT, `scene-${n}.webm`);
+  if (!isDirectlyUnder(OUT, webm)) throw new Error(`Unexpected recording location: ${webm}`);
+  const target = sceneFile(n, "webm");
   if (existsSync(target)) unlinkSync(target);
   renameSync(webm, target);
   console.log(`scene ${n}: ${t.elapsed().toFixed(1)}s recorded after a ${lead.toFixed(2)}s lead -> ${target}`);
-  const mp4 = path.join(OUT, `scene-${n}.mp4`);
+  const mp4 = sceneFile(n, "mp4");
   execFileSync(FFMPEG, [
     "-y", "-loglevel", "error",
     "-ss", lead.toFixed(3),
@@ -377,7 +414,13 @@ async function record(browser: Awaited<ReturnType<typeof chromium.launch>>, n: (
 }
 
 async function main() {
-  const only = new Set(process.argv.slice(2).map(Number));
+  // Command-line scene numbers only select entries of FOOTAGE_SCENES; anything else is an error.
+  const only = new Set<number>();
+  for (const arg of process.argv.slice(2)) {
+    const n = Number(arg);
+    if (!isScene(n)) throw new Error(`Unknown scene "${arg}"; footage scenes are ${FOOTAGE_SCENES.join(", ")}`);
+    only.add(n);
+  }
   const scenes = FOOTAGE_SCENES.filter((n) => only.size === 0 || only.has(n));
   mkdirSync(OUT, { recursive: true });
   const shots = syncAikidoShots();

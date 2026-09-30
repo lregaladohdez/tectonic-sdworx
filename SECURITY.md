@@ -69,6 +69,8 @@ Chrome run against a production build (`next build && next start`).
 | 7 | `protobufjs` low (DoS) | Override `protobufjs@7` -> 8.8.0 (`@google/genai` only uses `protobufjs/minimal`; import verified). |
 | 8 | `actions/checkout` persists credentials | `persist-credentials: false` on both checkout steps in `pipeline.yml`. |
 | 9 | CSP allows inline CSS | Accepted, see "Known gaps": style attributes cannot take a nonce. |
+| 10 | Third-party GitHub Actions not pinned (re-scan, high) | Every `uses:` in `pipeline.yml` now points at a full commit SHA with the version as a trailing comment (`actions/checkout` v4.4.0, `actions/setup-node` v4.4.0, `google-github-actions/auth` v2.1.13, `setup-gcloud` v2.2.1, `deploy-cloudrun` v2.7.6), resolved with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`. |
+| 11 | Potential file inclusion via file reads in `scripts/aikido-shots.ts` and `scripts/video-record.ts` (re-scan, high) | Both are dev-only tooling (header comments say so). `scripts/safe-path.ts` adds `fileUnder(base, name)`: base name only, resolved against a fixed directory, refused outside it. The screenshot sync only touches `before.png`/`after.png`; the recorder only touches `scene-<n>.webm/.mp4` for `n` in `FOOTAGE_SCENES` and `storage-state.json`, all under `public/video`; command-line scene numbers only select entries of that constant; the Playwright cache scan accepts only `chromium-<digits>` directory names and checks each candidate stays inside the cache; `CHROMIUM_PATH`/`FFMPEG` must be absolute and are handed to the launcher, never read. |
 
 `npm audit --audit-level=moderate`: 0 vulnerabilities after the changes.
 
@@ -141,8 +143,6 @@ Chrome run against a production build (`next build && next start`).
 
 - Shared demo passcode and in-memory state: hackathon scope, see "Known gaps".
 - `__Host-` cookie prefix: requires `Secure`, which would break local `http://` development.
-- GitHub Actions pinned to major tags, not SHAs: Dependabot keeps them current; SHA pinning is a
-  reasonable follow-up.
 - `style-src 'unsafe-inline'`: see "Known gaps".
 
 ## Aikido process for the grade
