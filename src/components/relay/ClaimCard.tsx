@@ -1,6 +1,6 @@
 import type { Claim, ClaimReview, ClaimTrust, KnowledgeDocument, Person } from "@/relay/types";
 import { ClaimActions } from "./ClaimActions";
-import { StatusBadge } from "./StatusBadge";
+import { StatusBadge, VERDICT_TONE } from "./StatusBadge";
 
 interface Props {
   workspaceId: string;
@@ -18,7 +18,7 @@ export function ClaimCard({ workspaceId, claim, trust, review, documents, people
   const peopleNames = Object.fromEntries([...people.values()].map((p) => [p.id, p.name]));
 
   return (
-    <article className="flex flex-col gap-4 rounded-lg border border-line bg-surface p-5">
+    <article className={`flex flex-col gap-4 rounded-lg border border-line border-l-4 bg-surface p-5 ${VERDICT_TONE[trust.verdict].card}`}>
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <StatusBadge verdict={trust.verdict} />

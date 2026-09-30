@@ -4,8 +4,8 @@ import { SignOutButton } from "./SignOutButton";
 
 export function Shell({ user, workspace, children }: { user: User; workspace: Workspace; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-surface-alt">
-      <header className="border-b border-line bg-surface">
+    <div className="min-h-screen">
+      <header className="border-b border-line bg-surface/90 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-3">
           <Link href={`/w/${workspace.id}`} className="flex items-center gap-3">
             <span className="flex gap-1">

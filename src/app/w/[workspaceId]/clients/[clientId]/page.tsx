@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireWorkspacePage } from "@/lib/auth/access";
 import { ClaimCard } from "@/components/relay/ClaimCard";
 import { Shell } from "@/components/relay/Shell";
+import { VERDICT_TONE } from "@/components/relay/StatusBadge";
 import { assessClientCached, llmMode } from "@/relay/assess-cached";
 import { getClient, getReview, listDocuments, listPeople } from "@/relay/store";
 import { VERDICTS } from "@/relay/types";
@@ -44,17 +45,19 @@ export default async function ClaimBoardPage({ params }: PageProps<"/w/[workspac
       </div>
 
       <dl className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {[
-          ["Claims", claims.length],
-          ["Confirmed", counts.confirmed],
-          ["Contradicted", counts.contradicted],
-          ["Outdated", counts.outdated + counts.expiring],
-          ["Unsupported", counts.unsupported],
-          ["Reviewed", reviewed],
-        ].map(([label, n]) => (
-          <div key={label} className="rounded-lg border border-line bg-surface p-3">
+        {(
+          [
+            ["Claims", claims.length, "border-t-ink", "text-ink"],
+            ["Confirmed", counts.confirmed, VERDICT_TONE.confirmed.tile, VERDICT_TONE.confirmed.text],
+            ["Contradicted", counts.contradicted, VERDICT_TONE.contradicted.tile, VERDICT_TONE.contradicted.text],
+            ["Outdated", counts.outdated + counts.expiring, VERDICT_TONE.outdated.tile, VERDICT_TONE.outdated.text],
+            ["Unsupported", counts.unsupported, VERDICT_TONE.unsupported.tile, VERDICT_TONE.unsupported.text],
+            ["Reviewed", reviewed, "border-t-brand", "text-brand"],
+          ] as const
+        ).map(([label, n, tile, text]) => (
+          <div key={label} className={`rounded-lg border border-line border-t-4 bg-surface p-3 ${tile}`}>
             <dt className="text-xs text-slate">{label}</dt>
-            <dd className="text-xl font-semibold text-ink">{n}</dd>
+            <dd className={`text-xl font-semibold ${text}`}>{n}</dd>
           </div>
         ))}
       </dl>
