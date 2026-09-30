@@ -23,7 +23,7 @@ acting as a signed-in user. Everything below exists to close those three.
 | Provider keys: server-only modules, never `NEXT_PUBLIC_`, loaded through a validated env schema | `src/lib/env.ts`, `src/lib/ai/*` |
 | Generated audio is streamed back to the caller, never written under `public/` | `src/app/api/tts/route.ts` |
 | Security headers: CSP, `X-Frame-Options: DENY`, `nosniff`, referrer policy | `next.config.ts` |
-| Dependencies: Aikido scan on push and PR, `npm audit --audit-level=high` in CI, Dependabot weekly | `.github/` |
+| Dependencies: Aikido GitHub App check on every PR, `npm audit --audit-level=high` in the pipeline, Dependabot weekly; deploys only run after the pipeline passes | `.github/workflows/pipeline.yml` |
 
 Verified by hand with curl on 2026-09-30: unauthenticated board → 307 to login; cross-origin
 login → 401; wrong passcode → 401; member reading another workspace → 404; review on another

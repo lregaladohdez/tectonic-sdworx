@@ -188,10 +188,11 @@ the resulting MP4 and MP3 files live only on that instance and are not downloada
 
 ## Security
 
-Security is part of the grade, so it is part of the workflow. Aikido scans every push and PR
-and blocks on HIGH+ findings, CI runs `npm audit`, Dependabot keeps dependencies fresh, and
-all provider keys stay server-side in `.env.local`. Details and rules in [SECURITY.md](SECURITY.md).
+Security is part of the grade, so it is part of the workflow. The Aikido GitHub App checks
+every PR and blocks on HIGH+ findings, the pipeline runs `npm audit` and only deploys when
+tests pass, Dependabot keeps dependencies fresh, and all provider keys stay server-side.
+Details and rules in [SECURITY.md](SECURITY.md).
 
-To activate Aikido on a fresh fork: connect the repo at app.aikido.dev, create a CI secret
-key under Integrations → Continuous Integration, and store it as the `AIKIDO_SECRET_KEY`
-repository secret.
+To activate Aikido on a fresh fork: connect the repo at app.aikido.dev (this installs the
+PR checks App). Do not add Aikido's GitHub Action on top; Aikido rejects it on a repo the App
+already protects.
