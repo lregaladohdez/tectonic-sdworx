@@ -88,9 +88,9 @@ describe("regulation-watch matching", () => {
 });
 
 describe("regulation-watch on the demo workspace (stub LLM)", () => {
-  it("flags c2 (meal vouchers, BE) as outdated with the RSZ notice as external evidence", async () => {
+  it("flags c2 (meal vouchers, BE) as expiring with the RSZ notice as external evidence", async () => {
     const r = (await byClaim()).get("c2");
-    expect(r?.verdict).toBe("outdated");
+    expect(r?.verdict).toBe("expiring");
     expect(r?.confidence).toBe(0.7);
     expect(r?.evidence.at(0)?.documentId).toBe("reg:reg-be-meal-vouchers-2026");
     expect(r?.evidence.at(0)?.url).toMatch(/^https:\/\//);
@@ -102,9 +102,9 @@ describe("regulation-watch on the demo workspace (stub LLM)", () => {
     expect(r?.details?.llmSummary).toBe(false);
   });
 
-  it("flags c8 (indexation, BE, JC 118) as outdated with the January 2026 indexation", async () => {
+  it("flags c8 (indexation, BE, JC 118) as expiring with the January 2026 indexation", async () => {
     const r = (await byClaim()).get("c8");
-    expect(r?.verdict).toBe("outdated");
+    expect(r?.verdict).toBe("expiring");
     expect(r?.evidence.map((e) => e.documentId)).toContain("reg:reg-be-jc118-indexation-2026-01");
     expect(r?.summary).toContain("2.19%");
     expect(r?.actions?.find((a) => a.type === "ask-expert")?.personId).toBe("p-tom");
@@ -131,7 +131,7 @@ describe("regulation-watch on the demo workspace (stub LLM)", () => {
       llm: createStubLlm({ generateText: async () => { throw new Error("provider down"); } }),
     });
     const [f] = await regulationWatch.evaluate([c2], broken);
-    expect(f.verdict).toBe("outdated");
+    expect(f.verdict).toBe("expiring");
     expect(f.details?.llmSummary).toBe(false);
   });
 

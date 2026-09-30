@@ -101,8 +101,10 @@ async function llmSummary(
 
 /**
  * Deterministic matching of claim anchors against a feed of regulation notices.
- * A claim is `outdated` when a matching change already applies, `expiring` when
- * one is coming. Build with a custom feed for tests; the default uses REGULATION_FEED.
+ * Without an LLM the signal cannot tell whether a change contradicts the claim or
+ * merely touches its subject, so a matching notice yields `expiring` ("a change
+ * applies or is coming; verify the claim against it"), never `outdated` on its own.
+ * Build with a custom feed for tests; the default uses REGULATION_FEED.
  */
 export function createRegulationWatch(feed: RegulationNotice[] = REGULATION_FEED): TrustSignal {
   return {
@@ -153,7 +155,7 @@ export function createRegulationWatch(feed: RegulationNotice[] = REGULATION_FEED
           results.push({
             signalId: this.id,
             claimId: claim.id,
-            verdict: inForce ? "outdated" : "expiring",
+            verdict: "expiring",
             confidence: inForce ? CONFIDENCE_APPLIED : CONFIDENCE_UPCOMING,
             summary: refined ?? fallback,
             evidence,

@@ -95,20 +95,4 @@ export const REGULATION_FEED: RegulationNotice[] = [
     kind: "threshold",
     verified: true,
   },
-  {
-    id: "reg-be-holiday-financing-2026",
-    topic: "holiday-pay",
-    jurisdiction: { country: "BE" },
-    title: "RVA contribution to the financing of blue-collar annual holiday fixed at 10%",
-    summary:
-      "Article 18, section 3 of the consolidated annual holiday laws of 28 June 1971 now sets the RVA contribution to the annual holiday fund at 10% of the temporary-unemployment benefits concerned, by the law of 11 February 2026 (Belgisch Staatsblad 26 February 2026), in force from 1 January 2026. This changes how blue-collar holiday pay is financed, not the amounts paid to workers.",
-    source: {
-      name: "Justel, Wetten betreffende de jaarlijkse vakantie van de werknemers (art. 18)",
-      url: "https://www.ejustice.just.fgov.be/cgi_loi/change_lg.pl?language=nl&la=N&cn=1971062803&table_name=wet",
-    },
-    publishedAt: "2026-02-26",
-    effectiveFrom: "2026-01-01",
-    kind: "change",
-    verified: true,
-  },
 ];
