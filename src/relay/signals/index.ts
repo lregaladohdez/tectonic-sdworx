@@ -2,10 +2,11 @@
  * Signal registration. Add a new signal by importing it here; nothing else changes.
  */
 import { registerSignal, listSignals } from "../registry";
+import { documentEvidence } from "./document-evidence";
 import { documentFreshness } from "./document-freshness";
 import { expertLocator } from "./expert-locator";
 
-const ALL = [documentFreshness, expertLocator];
+const ALL = [documentFreshness, documentEvidence, expertLocator];
 
 export function registerAllSignals(): void {
   if (listSignals().length > 0) return;
