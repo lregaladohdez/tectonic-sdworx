@@ -11,10 +11,19 @@ const byClaim = async (context = ctx) => {
 };
 
 describe("expert-locator", () => {
-  it("only fires for claims the documents leave silent or thin (c3 and c8)", async () => {
+  it("only fires for claims the documents leave silent or thin (c3, c8, w5, b5)", async () => {
     const m = await byClaim();
-    expect([...m.keys()].sort()).toEqual(["c3", "c8"]);
-    for (const id of ["c1", "c2", "c4", "c5", "c6", "c7"]) expect(m.has(id)).toBe(false);
+    expect([...m.keys()].sort()).toEqual(["b5", "c3", "c8", "w5"]);
+    for (const id of ["c1", "c2", "c4", "c5", "c6", "c7", "w1", "w2", "w3", "w4", "b1", "b2", "b3", "b4", "b6"]) {
+      expect(m.has(id)).toBe(false);
+    }
+  });
+
+  it("sends the director's phone preference (b5) to Karim, who owns the file and said it", async () => {
+    const r = (await byClaim()).get("b5")!;
+    expect(r.verdict).toBe("unsupported");
+    expect(r.summary).toContain("Karim El Amrani (Outgoing payroll consultant, moving to the Ghent office) is the closest expert");
+    expect(r.actions?.at(0)).toEqual({ type: "ask-expert", label: "Ask Karim El Amrani", personId: "p-karim" });
   });
 
   it("sends the WhatsApp preference (c3) to Nadia, who knows the contact and said it herself", async () => {
@@ -26,7 +35,10 @@ describe("expert-locator", () => {
     expect(r.summary).toContain("Nadia Haddad (Outgoing payroll consultant) is the closest expert");
     expect(r.summary).toContain("knows contact");
     expect(r.summary).toContain("made the claim");
-    expect(r.actions).toEqual([{ type: "ask-expert", label: "Ask Nadia Haddad", personId: "p-nadia" }]);
+    expect(r.actions).toEqual([
+      { type: "ask-expert", label: "Ask Nadia Haddad", personId: "p-nadia" },
+      { type: "ask-expert", label: "Ask Karim El Amrani", personId: "p-karim" },
+    ]);
   });
 
   it("sends the indexation question (c8) to Els first, with Tom as runner-up", async () => {
@@ -45,6 +57,8 @@ describe("expert-locator", () => {
       ["p-els", 7],
       ["p-tom", 4],
       ["p-nadia", 4],
+      ["p-an", 1],
+      ["p-karim", 1],
     ]);
     expect(c8.at(0)?.reasons).toEqual([
       "knows joint-committee, indexation (+6)",
@@ -126,7 +140,7 @@ describe("expert-locator", () => {
       log: (m) => logs.push(m),
     });
     const results = await expertLocator.evaluate(CLAIMS, broken);
-    expect(results.map((r) => r.claimId).sort()).toEqual(["c3", "c8"]);
+    expect(results.map((r) => r.claimId).sort()).toEqual(["b5", "c3", "c8", "w5"]);
     expect(logs.some((l) => l.includes("provider down"))).toBe(true);
 
     const bad = { ...claim("c8"), topics: undefined as unknown as string[] };

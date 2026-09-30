@@ -21,6 +21,17 @@ const EXPECTED: Record<string, Verdict> = {
   c6: "confirmed",
   c7: "contradicted",
   c8: "unsupported",
+  w1: "confirmed",
+  w2: "confirmed",
+  w3: "contradicted",
+  w4: "confirmed",
+  w5: "unsupported",
+  b1: "confirmed",
+  b2: "contradicted",
+  b3: "confirmed",
+  b4: "confirmed",
+  b5: "unsupported",
+  b6: "confirmed",
 };
 
 describe("document-evidence", () => {
@@ -100,6 +111,13 @@ describe("document-evidence", () => {
         expect(e.locator).toMatch(/^line \d+/);
       }
     }
+  });
+
+  it("only reads documents filed under the claim's own client", async () => {
+    const r = (await byClaim()).get("w4")!;
+    expect(r.verdict).toBe("confirmed");
+    expect(r.evidence.map((e) => e.documentId)).toEqual(["doc-willems-mealvoucher-2026"]);
+    expect(r.summary).not.toContain("Bakkerij");
   });
 
   it("never returns results for claims from another workspace", async () => {

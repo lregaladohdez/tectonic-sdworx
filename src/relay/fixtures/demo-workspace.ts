@@ -1,9 +1,16 @@
 /**
- * Seeded demo workspace: a fictional Belgian bakery being handed over between
- * two payroll consultants. All names, figures and dates are invented for the demo.
- * Planted problems: a superseded meal-voucher policy (c2), a stale company-car
- * email (c6), a contradiction on the Sunday premium (c7), tacit knowledge with no
- * document (c3), and a claim that depends on regulation, not documents (c8).
+ * Seeded demo workspace: three Belgian clients being handed over between payroll
+ * consultants at the same SD Worx team. All names, figures and dates are invented.
+ *
+ * Bakkerij Janssens (Nadia to Jonas): a superseded meal-voucher policy (c2), a stale
+ * company-car email (c6), a contradiction on the Sunday premium (c7), tacit knowledge
+ * with no document (c3), and a claim that depends on regulation, not documents (c8).
+ * Garage Willems (Nadia to Jonas): a 2022 email as the only source for eco-cheques (w2),
+ * a company-car claim the client file contradicts while the car policy was revised (w3),
+ * and an overtime rule nobody wrote down (w5).
+ * Thuiszorg De Brug (Karim to Jonas): a night premium the client file contradicts (b2),
+ * a bike allowance resting on a 2024 email (b3), and a director's preference that lives
+ * only in Karim's head (b5).
  */
 import type {
   Claim,
@@ -66,6 +73,24 @@ export const PEOPLE: Person[] = [
     topics: ["indexation", "meal-vouchers", "benefit-in-kind", "company-car", "regulation"],
     jurisdictions: ["BE"],
   },
+  {
+    id: "p-karim",
+    workspaceId: "ws-demo",
+    name: "Karim El Amrani",
+    email: "karim@relay.demo",
+    role: "Outgoing payroll consultant, moving to the Ghent office",
+    topics: ["client-history", "contact", "night-work", "bike-allowance", "attractiveness-premium"],
+    jurisdictions: ["BE"],
+  },
+  {
+    id: "p-an",
+    workspaceId: "ws-demo",
+    name: "An Wouters",
+    email: "an@relay.demo",
+    role: "Mobility and benefits specialist",
+    topics: ["company-car", "benefit-in-kind", "eco-cheques", "bike-allowance", "meal-vouchers"],
+    jurisdictions: ["BE"],
+  },
 ];
 
 export const CLIENTS: Client[] = [
@@ -75,6 +100,20 @@ export const CLIENTS: Client[] = [
     name: "Bakkerij Janssens BV",
     sector: "Bakery, 14 staff",
     jurisdiction: { country: "BE", region: "Flanders", jointCommittee: "118" },
+  },
+  {
+    id: "cl-willems",
+    workspaceId: "ws-demo",
+    name: "Garage Willems NV",
+    sector: "Car repair and tyres, 9 staff",
+    jurisdiction: { country: "BE", region: "Flanders", jointCommittee: "112" },
+  },
+  {
+    id: "cl-debrug",
+    workspaceId: "ws-demo",
+    name: "Thuiszorg De Brug vzw",
+    sector: "Home care non-profit, 38 staff",
+    jurisdiction: { country: "BE", region: "Flanders", jointCommittee: "330" },
   },
 ];
 
@@ -169,9 +208,164 @@ export const DOCUMENTS: KnowledgeDocument[] = [
       "Nadia: Peter, the owner. He prefers WhatsApp for urgent questions, don't email him.",
     ].join("\n"),
   },
+
+  // Garage Willems NV
+  {
+    id: "doc-willems-file",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    kind: "client-file",
+    title: "Client file: Garage Willems NV",
+    updatedAt: "2026-05-20",
+    ownerId: "p-nadia",
+    topics: ["joint-committee", "company-car", "benefit-in-kind", "contact"],
+    jurisdiction: { country: "BE", region: "Flanders", jointCommittee: "112" },
+    content: [
+      "Garage Willems NV, Merksem. Car repair and tyre centre with one workshop and a small showroom.",
+      "Staff: 7 mechanics under Joint Committee 112 (garages) and 2 office employees under Joint Committee 200.",
+      "Company cars: three vehicles with private use (owner Dirk Willems, workshop manager Bart Claes, sales advisor Lien Maes); the benefit in kind is calculated monthly.",
+      "Contacts: Dirk Willems (owner) and Lien Maes (administration, payroll questions).",
+    ].join("\n"),
+  },
+  {
+    id: "doc-willems-eco-email",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    kind: "email",
+    title: "Email from Lien Maes: eco-cheques",
+    updatedAt: "2022-11-08",
+    ownerId: "p-nadia",
+    topics: ["eco-cheques"],
+    content:
+      "Hi Nadia, confirmed with Dirk: eco-cheques of 250 euro per full-time employee, paid every year in June. Lien",
+  },
+  {
+    id: "doc-willems-mealvoucher-2026",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    kind: "policy",
+    title: "Meal voucher arrangement Garage Willems (2026)",
+    updatedAt: "2026-01-12",
+    effectiveFrom: "2026-01-01",
+    ownerId: "p-nadia",
+    topics: ["meal-vouchers"],
+    content:
+      "From 1 January 2026 every employee of Garage Willems NV receives one meal voucher per day worked with a face value of 8.00 euro: employer contribution 6.91 euro, employee contribution 1.09 euro.",
+  },
+  {
+    id: "doc-willems-car-policy-2024",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    kind: "policy",
+    title: "Company car policy Garage Willems (2024)",
+    updatedAt: "2024-03-01",
+    effectiveFrom: "2024-01-01",
+    ownerId: "p-an",
+    topics: ["company-car", "benefit-in-kind"],
+    content:
+      "Company car policy 2024. Private use is allowed for the vehicles assigned to the owner and the workshop manager; a fuel card is included. The benefit in kind is calculated with the CO2 formula and the 2024 reference values.",
+  },
+  {
+    id: "doc-willems-car-policy-2026",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    kind: "policy",
+    title: "Company car policy Garage Willems (2026)",
+    updatedAt: "2026-02-10",
+    effectiveFrom: "2026-01-01",
+    supersedes: "doc-willems-car-policy-2024",
+    ownerId: "p-an",
+    topics: ["company-car", "benefit-in-kind"],
+    content:
+      "Company car policy 2026, replaces the 2024 policy. Private use is allowed for three vehicles (owner, workshop manager, sales advisor); from 1 January 2026 new orders must be zero-emission. The benefit in kind is calculated with the CO2 formula and the 2026 reference values.",
+  },
+  {
+    id: "doc-willems-transcript",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    kind: "transcript",
+    title: "Handover conversation, Nadia to Jonas (29 Sep 2026)",
+    updatedAt: "2026-09-29",
+    ownerId: "p-nadia",
+    topics: ["client-history"],
+    content: [
+      "Nadia: Garage Willems in Merksem. Dirk Willems runs it: seven mechanics in the workshop under joint committee 112, two people in the office under 200.",
+      "Jonas: Company cars?",
+      "Nadia: Only one company car has private use, Dirk's. The rest are workshop vans.",
+      "Nadia: Meal vouchers are eight euro since January, one per day worked.",
+      "Nadia: Eco-cheques, two hundred and fifty euro per full-timer, paid every June.",
+      "Nadia: Overtime is paid at a hundred and fifty percent, they never convert it into time off.",
+      "Jonas: Who handles the admin?",
+      "Nadia: Lien Maes. Dirk only calls when something is wrong.",
+    ].join("\n"),
+  },
+
+  // Thuiszorg De Brug vzw
+  {
+    id: "doc-debrug-file",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    kind: "client-file",
+    title: "Client file: Thuiszorg De Brug vzw",
+    updatedAt: "2026-06-02",
+    ownerId: "p-karim",
+    topics: ["joint-committee", "night-work", "premium", "attractiveness-premium", "contact"],
+    jurisdiction: { country: "BE", region: "Flanders", jointCommittee: "330" },
+    content: [
+      "Thuiszorg De Brug vzw, Ghent. Non-profit home-care service with 38 staff: 31 care workers and nurses and 7 office and planning staff, all under Joint Committee 330 (health institutions and services).",
+      "Night work is paid with a 40% premium, as agreed in the 2025 company agreement.",
+      "The attractiveness premium under Joint Committee 330 is paid together with the December payroll.",
+      "Contacts: Mieke Vandenberghe (director) and Bram Ceulemans (HR and planning).",
+    ].join("\n"),
+  },
+  {
+    id: "doc-debrug-bike-email",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    kind: "email",
+    title: "Email from Bram Ceulemans: bike allowance",
+    updatedAt: "2024-02-19",
+    ownerId: "p-karim",
+    topics: ["bike-allowance"],
+    content:
+      "Hi Karim, we pay the bike allowance at 0.27 euro per kilometre for everyone who cycles to the clients; the kilometres are declared monthly in the planning tool. Bram",
+  },
+  {
+    id: "doc-debrug-planning-note",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    kind: "note",
+    title: "Note: part-time staff and holiday pay at De Brug",
+    updatedAt: "2025-11-03",
+    ownerId: "p-karim",
+    topics: ["holiday-pay", "working-time"],
+    content:
+      "Most care workers work part-time, between 50% and 80%. Holiday pay for these employees is paid with the May payroll. The planning tool exports the hours per client for the monthly declaration.",
+  },
+  {
+    id: "doc-debrug-transcript",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    kind: "transcript",
+    title: "Handover conversation, Karim to Jonas (29 Sep 2026)",
+    updatedAt: "2026-09-29",
+    ownerId: "p-karim",
+    topics: ["client-history"],
+    content: [
+      "Karim: De Brug is a home-care vzw in Ghent, thirty-eight people, all under joint committee 330.",
+      "Jonas: Anything special in the pay?",
+      "Karim: Night work gets a thirty-five percent premium. And the attractiveness premium goes out with the December payroll.",
+      "Karim: Most of them cycle to the clients. The bike allowance is twenty-seven cents per kilometre, they declare it monthly in the planning tool.",
+      "Karim: Lots of part-timers. Their holiday pay is paid with the May payroll.",
+      "Jonas: Who do I talk to?",
+      "Karim: Mieke, the director. She wants payroll questions by phone, never by email, she doesn't read them.",
+    ].join("\n"),
+  },
 ];
 
 const BE118 = { country: "BE", jointCommittee: "118" };
+const BE112 = { country: "BE", jointCommittee: "112" };
+const BE330 = { country: "BE", jointCommittee: "330" };
 
 export const CLAIMS: Claim[] = [
   {
@@ -269,6 +463,142 @@ export const CLAIMS: Claim[] = [
     quote: "The wages in 118 get indexed every January, keep an eye on that.",
     topics: ["indexation", "joint-committee"],
     anchors: [{ topic: "indexation", jurisdiction: BE118 }],
+  },
+
+  // Garage Willems NV, said by Nadia
+  {
+    id: "w1",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    text: "The mechanics fall under Joint Committee 112.",
+    speakerId: "p-nadia",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-willems-transcript",
+    quote: "Seven mechanics in the workshop under joint committee 112, two people in the office under 200.",
+    topics: ["joint-committee"],
+    anchors: [{ topic: "joint-committee", jurisdiction: BE112 }],
+  },
+  {
+    id: "w2",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    text: "Eco-cheques of 250 euro are paid every June.",
+    speakerId: "p-nadia",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-willems-transcript",
+    quote: "Eco-cheques, two hundred and fifty euro per full-timer, paid every June.",
+    topics: ["eco-cheques"],
+    anchors: [],
+  },
+  {
+    id: "w3",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    text: "Only one company car has private use, the owner's.",
+    speakerId: "p-nadia",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-willems-transcript",
+    quote: "Only one company car has private use, Dirk's. The rest are workshop vans.",
+    topics: ["company-car", "benefit-in-kind"],
+    anchors: [{ topic: "benefit-in-kind", jurisdiction: { country: "BE" } }],
+  },
+  {
+    id: "w4",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    text: "Meal vouchers have a face value of 8 euro per day worked.",
+    speakerId: "p-nadia",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-willems-transcript",
+    quote: "Meal vouchers are eight euro since January, one per day worked.",
+    topics: ["meal-vouchers"],
+    anchors: [{ topic: "meal-vouchers", jurisdiction: BE112 }],
+  },
+  {
+    id: "w5",
+    workspaceId: "ws-demo",
+    clientId: "cl-willems",
+    text: "Overtime is paid at 150% and never converted into time off.",
+    speakerId: "p-nadia",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-willems-transcript",
+    quote: "Overtime is paid at a hundred and fifty percent, they never convert it into time off.",
+    topics: ["overtime", "premium"],
+    anchors: [],
+  },
+
+  // Thuiszorg De Brug vzw, said by Karim
+  {
+    id: "b1",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    text: "All staff fall under Joint Committee 330.",
+    speakerId: "p-karim",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-debrug-transcript",
+    quote: "Thirty-eight people, all under joint committee 330.",
+    topics: ["joint-committee"],
+    anchors: [{ topic: "joint-committee", jurisdiction: BE330 }],
+  },
+  {
+    id: "b2",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    text: "Night work is paid with a 35% premium.",
+    speakerId: "p-karim",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-debrug-transcript",
+    quote: "Night work gets a thirty-five percent premium.",
+    topics: ["night-work", "premium"],
+    anchors: [{ topic: "night-work", jurisdiction: BE330 }],
+  },
+  {
+    id: "b3",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    text: "The bike allowance is 0.27 euro per kilometre.",
+    speakerId: "p-karim",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-debrug-transcript",
+    quote: "The bike allowance is twenty-seven cents per kilometre, they declare it monthly in the planning tool.",
+    topics: ["bike-allowance"],
+    anchors: [{ topic: "bike-allowance", jurisdiction: { country: "BE" } }],
+  },
+  {
+    id: "b4",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    text: "The attractiveness premium is paid with the December payroll.",
+    speakerId: "p-karim",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-debrug-transcript",
+    quote: "The attractiveness premium goes out with the December payroll.",
+    topics: ["attractiveness-premium", "premium"],
+    anchors: [{ topic: "attractiveness-premium", jurisdiction: BE330 }],
+  },
+  {
+    id: "b5",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    text: "The director wants payroll questions by phone, never by email.",
+    speakerId: "p-karim",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-debrug-transcript",
+    quote: "She wants payroll questions by phone, never by email, she doesn't read them.",
+    topics: ["contact"],
+    anchors: [],
+  },
+  {
+    id: "b6",
+    workspaceId: "ws-demo",
+    clientId: "cl-debrug",
+    text: "Holiday pay for the part-time staff is paid with the May payroll.",
+    speakerId: "p-karim",
+    saidAt: "2026-09-29",
+    sourceDocumentId: "doc-debrug-transcript",
+    quote: "Lots of part-timers. Their holiday pay is paid with the May payroll.",
+    topics: ["holiday-pay"],
+    anchors: [{ topic: "holiday-pay", jurisdiction: { country: "BE" } }],
   },
 ];
 

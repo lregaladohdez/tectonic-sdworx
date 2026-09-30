@@ -44,7 +44,10 @@ src/relay/signals/<signal-id>/index.test.ts   vitest against the demo fixtures
 src/relay/signals/index.ts                    add the import to ALL
 ```
 
-Fixtures: `src/relay/fixtures/demo-workspace.ts` (claims c1..c8, five documents, three people).
+Fixtures: `src/relay/fixtures/demo-workspace.ts` (three clients: claims c1..c8, w1..w5, b1..b6;
+16 documents; five people). Use `documentsForClaim` from `src/relay/scope.ts` to pick the
+documents a claim may be judged against: same workspace, never a transcript, and either
+workspace-wide or filed under the claim's own client.
 Offline LLM: `createStubLlm()` in `src/relay/testing.ts`; a signal must degrade gracefully
 when the stub returns empty text (return no results, do not throw).
 

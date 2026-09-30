@@ -1,3 +1,4 @@
+import { documentsForClaim } from "../../scope";
 import type {
   Claim,
   KnowledgeDocument,
@@ -80,9 +81,7 @@ export function keyTerms(text: string): string[] {
 const sharedTopics = (a: readonly string[], b: readonly string[]) => a.filter((t) => b.includes(t));
 
 const knowledgeDocuments = (claim: Claim, ctx: SignalContext) =>
-  ctx.documents.filter(
-    (d) => d.kind !== "transcript" && d.workspaceId === ctx.workspaceId && d.workspaceId === claim.workspaceId,
-  );
+  documentsForClaim(claim, ctx.documents).filter((d) => d.workspaceId === ctx.workspaceId);
 
 /**
  * Deterministic coverage check. A claim is "silent" when no knowledge document shares a

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { documentsForClaim } from "../../scope";
 import type {
   Claim,
   Evidence,
@@ -227,6 +228,7 @@ function rankPassages(
   claimBag: TokenBag,
   passages: Passage[],
   bags: TokenBag[],
+  allowed: ReadonlySet<string>,
   claimVector?: number[],
   passageVectors?: number[][],
 ): RankedPassage[] {
@@ -239,7 +241,7 @@ function rankPassages(
     return { ...p, score, topicScore, lexicalScore, cosine: cos, bag: bags[i] };
   });
   return ranked
-    .filter((p) => p.score > 0)
+    .filter((p) => p.score > 0 && allowed.has(p.documentId))
     .sort((a, b) => b.score - a.score || b.document.updatedAt.localeCompare(a.document.updatedAt))
     .slice(0, TOP_PASSAGES);
 }
@@ -411,7 +413,8 @@ function bestPerson(claim: Claim, people: Person[]): Person | undefined {
   let bestOverlap = 0;
   for (const p of candidates) {
     const overlap = p.topics.filter((t) => claim.topics.includes(t)).length;
-    if (overlap > bestOverlap) {
+    const tieToSpeaker = overlap > 0 && overlap === bestOverlap && p.id === claim.speakerId;
+    if (overlap > bestOverlap || tieToSpeaker) {
       best = p;
       bestOverlap = overlap;
     }
@@ -463,7 +466,8 @@ export const documentEvidence: TrustSignal = {
           ctx.log(`document-evidence: claim ${claim.id} has no content to match on, skipped`);
           return undefined;
         }
-        const ranked = rankPassages(claim, claimBag, passages, bags, vectors?.claims[i], vectors?.passages);
+        const allowed = new Set(documentsForClaim(claim, corpus).map((d) => d.id));
+        const ranked = rankPassages(claim, claimBag, passages, bags, allowed, vectors?.claims[i], vectors?.passages);
 
         const llm =
           ranked.length > 0

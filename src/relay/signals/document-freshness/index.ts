@@ -1,3 +1,4 @@
+import { documentsForClaim } from "../../scope";
 import type { Claim, Evidence, KnowledgeDocument, SignalContext, SignalResult, TrustSignal } from "../../types";
 
 /** Months after which supporting evidence is flagged. */
@@ -30,9 +31,7 @@ export const documentFreshness: TrustSignal = {
 
     const results: SignalResult[] = [];
     for (const claim of claims) {
-      const relevant = corpus.filter(
-        (d) => d.workspaceId === claim.workspaceId && d.topics.some((t) => claim.topics.includes(t)),
-      );
+      const relevant = documentsForClaim(claim, corpus).filter((d) => d.topics.some((t) => claim.topics.includes(t)));
       if (relevant.length === 0) continue;
 
       const current = relevant.filter((d) => !supersededBy.has(d.id));

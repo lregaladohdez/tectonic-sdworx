@@ -29,6 +29,16 @@ describe("document-freshness", () => {
     for (const id of ["c1", "c3", "c4", "c5", "c7", "c8"]) expect(m.has(id)).toBe(false);
   });
 
+  it("ignores another client's revised policy on the same topic", async () => {
+    const m = await byClaim();
+    expect(m.has("w4")).toBe(false); // the bakery's voucher policy was revised; the garage's was not
+    expect(m.get("w3")?.evidence.map((e) => e.documentId)).toEqual([
+      "doc-willems-car-policy-2024",
+      "doc-willems-car-policy-2026",
+    ]);
+    expect(m.get("b3")?.verdict).toBe("outdated");
+  });
+
   it("never looks at transcripts or other workspaces", async () => {
     const foreign = { ...DOCUMENTS.at(3)!, id: "x", workspaceId: "ws-other", updatedAt: "2019-01-01" };
     const results = await documentFreshness.evaluate(

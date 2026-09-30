@@ -16,10 +16,12 @@ passage, a regulation or a person. Accepted claims become the **verified client 
 
 ## What the demo shows
 
-A seeded workspace: a fictional Belgian bakery (Bakkerij Janssens BV, joint committee 118),
-five documents, three colleagues, and a scripted handover call between the outgoing
-consultant Nadia and the incoming consultant Jonas. Eight claims, four signals, and a
-planted story:
+A seeded workspace with three fictional Belgian clients changing hands in one payroll team:
+a bakery (Bakkerij Janssens BV, joint committee 118), a garage (Garage Willems NV, JC 112)
+and a home-care non-profit (Thuiszorg De Brug vzw, JC 330). Sixteen documents, five
+colleagues, three scripted handover calls, nineteen claims, four signals. The workspace page
+lists the clients, the regulation notices the signals watch, the team's experts and every
+knowledge source. Each client has its own planted story; the bakery, in detail:
 
 | Claim                                         | What the signals find                                                                                                             |
 |-----------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
@@ -36,6 +38,13 @@ the "shop staff under JC 118" claim becomes *unsupported* because the client fil
 names blue-collar and office staff, and the indexation claim becomes *confirmed* because
 regulation watch judges the FPS fiche as supporting it. Both readings are shown with their
 reasoning, which is the point.
+
+Garage Willems: the eco-cheque amount rests on an email from 2022, the company-car claim
+contradicts the client file while the car policy was revised in 2026, and an overtime rule
+was never written down. Thuiszorg De Brug: the night premium contradicts the client file,
+the bike allowance rests on a 2024 email, and the director's phone preference lives only in
+the outgoing consultant's head. Signals only read documents filed under the claim's own
+client (`src/relay/scope.ts`), so one client's policy never counts as evidence for another.
 
 For each claim the consultant can **accept** it, mark it **resolved**, or **ask** the
 proposed expert; the brief page collects the accepted claims.
@@ -82,8 +91,9 @@ client falls back to the other one. A live board takes about 6 to 9 seconds and 
 per process for five minutes. `ELEVENLABS_API_KEY` is only needed for the voice tooling.
 
 ```bash
-npm test                        # 55 unit tests: kernel, consolidation, scoped store, session, all four signals
+npm test                        # 59 unit tests: kernel, consolidation, scoped store, session, all four signals
 npm run relay:board             # prints the consolidated board with the deterministic judge
+npm run relay:board -- --all    # every client; --client <id> for one
 npm run relay:board -- --live   # same, with the providers from .env.local
 npm run typecheck && npm run lint && npm run build
 ```
@@ -220,7 +230,7 @@ The submission video is scripted in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md)
 
 - Claims are seeded, not extracted live: the transcript-to-claims step is a prompt away
   but is not wired to an upload yet.
-- No Teams, SharePoint or HR-system connectors; the five documents are seeded.
+- No Teams, SharePoint or HR-system connectors; the sixteen documents are seeded.
 - The regulation feed is curated by hand from official pages, not pulled live.
 - Single shared demo passcode instead of per-user credentials or SSO.
 - In-memory store and rate limiter: reviews reset when the server restarts, and it is one
