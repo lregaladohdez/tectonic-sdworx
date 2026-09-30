@@ -1,8 +1,8 @@
 # Relay: trust-verified client handovers
 
 [![Aikido Security](https://app.aikido.dev/assets/badges/label-only-light-theme.svg)](https://app.aikido.dev)
-[![Aikido scan](https://github.com/lregaladohdez/tectonic-sdworx/actions/workflows/aikido.yml/badge.svg)](https://github.com/lregaladohdez/tectonic-sdworx/actions/workflows/aikido.yml)
-[![CI](https://github.com/lregaladohdez/tectonic-sdworx/actions/workflows/ci.yml/badge.svg)](https://github.com/lregaladohdez/tectonic-sdworx/actions/workflows/ci.yml)
+[![Pipeline](https://github.com/lregaladohdez/tectonic-sdworx/actions/workflows/pipeline.yml/badge.svg)](https://github.com/lregaladohdez/tectonic-sdworx/actions/workflows/pipeline.yml)
+
 
 AI video generator built for SD Worx: a Next.js app that writes a script with an LLM,
 voices it with ElevenLabs, and renders the video with Remotion.
@@ -120,6 +120,71 @@ Compositions live in `src/remotion/compositions`. They can use Tailwind classes,
 the `brand-*` palette, thanks to `@remotion/tailwind-v4`. Register new compositions in
 `src/remotion/Root.tsx`. The `PromoVideo` composition takes a `voiceOver` path and plays it
 with Remotion's `<Audio>`.
+
+## Deploy (Google Cloud Run)
+
+The app ships as one container ([Dockerfile](Dockerfile)) that runs `next start` and renders
+videos server-side with Remotion's headless Chrome. Build it with Cloud Build and run it on
+Cloud Run in `europe-west1`, the same region as the Vertex AI calls:
+
+```bash
+PROJECT=qwiklabs-gcp-02-8ec6a39cdba0
+REGION=europe-west1
+IMAGE=$REGION-docker.pkg.dev/$PROJECT/apps/tectonic-sdworx:$(git rev-parse --short HEAD)
+
+gcloud auth login && gcloud config set project $PROJECT
+gcloud artifacts repositories create apps --repository-format=docker --location=$REGION  # once
+gcloud builds submit --region=$REGION --tag $IMAGE --timeout=1500 .
+gcloud run deploy tectonic-sdworx --region=$REGION --image=$IMAGE \
+  --no-allow-unauthenticated --memory=4Gi --cpu=2 --timeout=600 --concurrency=4 \
+  --set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT,GOOGLE_CLOUD_LOCATION=$REGION
+```
+
+The service starts private: only Google identities with `roles/run.invoker` can call it
+(test with `curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" <url>`).
+To open it to the public for the demo, run:
+
+```bash
+gcloud run services add-iam-policy-binding tectonic-sdworx --region=$REGION \
+  --member=allUsers --role=roles/run.invoker
+```
+
+Current deployment: <https://tectonic-sdworx-970554784378.europe-west1.run.app>
+
+On Cloud Run the Google client authenticates with the service's own identity, so no
+`GOOGLE_API_KEY` or ADC file is needed for Vertex. **Caveat:** the hackathon Qwiklabs
+project carries an org policy (`constraints/vertexai.allowedModels` = deny all) that blocks
+every Gemini model on Vertex, so `provider: "google"` fails there with a 400 from Vertex.
+Use a Gemini API key (`GOOGLE_API_KEY`, which takes over when `GOOGLE_CLOUD_PROJECT` is
+unset) or OpenAI instead.
+
+Login needs `SESSION_SECRET` and `RELAY_DEMO_PASSCODE`; the providers need their keys. All of
+them belong in Secret Manager, never in the image, the repo, or plain env vars. Run this once
+with the values from `.env.local` (it reads them from the file so nothing lands in shell history):
+
+```bash
+for pair in SESSION_SECRET:session-secret RELAY_DEMO_PASSCODE:relay-demo-passcode \
+            ELEVENLABS_API_KEY:elevenlabs-api-key OPENAI_API_KEY:openai-api-key \
+            GOOGLE_API_KEY:google-api-key; do
+  var=${pair%%:*}; name=${pair##*:}
+  val=$(grep -E "^$var=." .env.local | tail -1 | cut -d= -f2-)
+  [ -z "$val" ] && continue
+  if gcloud secrets describe $name >/dev/null 2>&1; then
+    printf '%s' "$val" | gcloud secrets versions add $name --data-file=-
+  else
+    printf '%s' "$val" | gcloud secrets create $name --data-file=-
+  fi
+done
+gcloud run services update tectonic-sdworx --region=$REGION \
+  --update-secrets=SESSION_SECRET=session-secret:latest,RELAY_DEMO_PASSCODE=relay-demo-passcode:latest,ELEVENLABS_API_KEY=elevenlabs-api-key:latest
+```
+
+Add `OPENAI_API_KEY=openai-api-key:latest` or `GOOGLE_API_KEY=google-api-key:latest` to that
+list once those secrets exist. The Cloud Run runtime identity (the default compute service
+account) must hold `roles/secretmanager.secretAccessor`.
+
+Known limitation: `/api/render` and `/api/tts` write to the container's ephemeral disk, so
+the resulting MP4 and MP3 files live only on that instance and are not downloadable yet.
 
 ## Security
 
