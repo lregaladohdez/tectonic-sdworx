@@ -2,21 +2,50 @@
 
 Security is a graded part of this project. Keep these rules when contributing.
 
-## Practices
+## Threat model in one paragraph
 
-- **Scanning.** Every push and pull request runs [Aikido Security](https://www.aikido.dev)
-  (dependencies, secrets, SAST) and `npm audit --audit-level=high`. A finding of HIGH or
-  above blocks the merge. Dependabot opens weekly update PRs.
-- **Secrets.** API keys live only in `.env.local`, which is git-ignored. Never commit keys,
-  never log them, never expose them to the browser (no `NEXT_PUBLIC_` prefix on secrets).
-  All provider clients are server-only modules.
-- **Input validation.** Every API route validates its body with zod before touching a
-  provider. Text sent to ElevenLabs is capped in length.
-- **Third-party calls.** OpenAI, ElevenLabs and Google are called from the server only, with
-  the minimum scopes/keys needed. Generated audio is written under `public/audio` with a
-  hashed filename derived from the input, never from user-supplied paths.
-- **Dependencies.** Keep Remotion packages on the same version. Run `npm audit` before
-  releasing and fix or document anything HIGH or above.
+Relay holds client payroll knowledge for a team of consultants. The assets are the
+documents, the extracted claims, and the review decisions. The main risks are another
+tenant reading them, an anonymous caller spending provider credits, and a forged request
+acting as a signed-in user. Everything below exists to close those three.
+
+## Controls that exist in the code
+
+| Control | Where |
+| --- | --- |
+| Session: HMAC-SHA256 signed cookie, `httpOnly`, `SameSite=Lax`, `Secure` in production, 8 h expiry, constant-time verification | `src/lib/auth/session.ts` |
+| Login: seeded users + shared passcode compared in constant time, 5 attempts per IP per minute, generic error for unknown user and wrong passcode | `src/app/api/auth/login/route.ts` |
+| Workspace scoping: every store read takes a workspace id; a record from another workspace is not found even with its id | `src/relay/store.ts` |
+| Membership: pages redirect to login without a session and 404 for non-members; API routes return 401 / 404 the same way | `src/lib/auth/access.ts` |
+| CSRF: every state-changing route checks that the Origin host equals the request host | `src/lib/http/guards.ts` |
+| Input validation: zod on every route body, length caps on text sent to providers | each `route.ts` |
+| Rate limits per user on provider routes (script, tts, render) and on reviews | `src/lib/http/guards.ts` |
+| Provider keys: server-only modules, never `NEXT_PUBLIC_`, loaded through a validated env schema | `src/lib/env.ts`, `src/lib/ai/*` |
+| Generated audio is streamed back to the caller, never written under `public/` | `src/app/api/tts/route.ts` |
+| Security headers: CSP, `X-Frame-Options: DENY`, `nosniff`, referrer policy | `next.config.ts` |
+| Dependencies: Aikido scan on push and PR, `npm audit --audit-level=high` in CI, Dependabot weekly | `.github/` |
+
+Verified by hand with curl on 2026-09-30: unauthenticated board → 307 to login; cross-origin
+login → 401; wrong passcode → 401; member reading another workspace → 404; review on another
+workspace's claim → 404; review naming a person from another workspace → 404; sixth failed
+login in a minute → 429. Unit tests cover the session token, the scoped store and the
+consolidation logic (`npm test`).
+
+## Known gaps (hackathon scope)
+
+- Single shared passcode for the demo users instead of per-user credentials or SSO.
+- In-memory store and rate limiter: one process, state resets on restart.
+- The Remotion render route writes MP4 files to the server's `out/` directory; they are not
+  served, but they are not cleaned up either.
+- `script-src` allows `'unsafe-inline'` because Next injects inline scripts; nonces are the
+  next step.
+
+## Aikido process for the grade
+
+1. Sign in at the hackathon link from the brief with "Continue with GitHub", connect this repo.
+2. Run the AI Code Audit once as the baseline and screenshot it.
+3. Fix or document each finding, mark it resolved, re-run, screenshot again.
+4. Keep both screenshots for the Builderbase submission.
 
 ## Dependency overrides
 
