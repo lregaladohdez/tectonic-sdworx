@@ -15,8 +15,7 @@
     "remotion:render": "remotion render PromoVideo out/PromoVideo.mp4",
     "remotion:upgrade": "remotion upgrade",
     "test": "vitest run",
-    "relay:board": "NODE_OPTIONS=--conditions=react-server tsx scripts/relay-board.ts",
-    "voice:samples": "tsx --env-file=.env.local scripts/voice-samples.ts",
+    "relay:board": "NODE_OPTIONS=--conditions=react-server tsx --env-file-if-exists=.env.local scripts/relay-board.ts",
     "voice:scenes": "tsx --env-file=.env.local scripts/voice-scenes.ts",
     "music:bed": "tsx --env-file=.env.local scripts/music-bed.ts"
   },

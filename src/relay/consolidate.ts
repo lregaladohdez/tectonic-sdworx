@@ -1,13 +1,16 @@
 import { getSignal } from "./registry";
 import type { ClaimTrust, SignalResult, SuggestedAction, Verdict } from "./types";
 
-/** Higher wins when signals disagree: a negative finding always beats a confirmation. */
+/**
+ * Higher wins when signals disagree: a negative finding always beats a confirmation,
+ * and a confirmation with evidence beats "no evidence found" from another signal.
+ */
 const PRECEDENCE: Record<Verdict, number> = {
   contradicted: 5,
   outdated: 4,
   expiring: 3,
-  unsupported: 2,
-  confirmed: 1,
+  confirmed: 2,
+  unsupported: 1,
 };
 
 /** Contribution of a verdict to the score, before weighting by confidence. */

@@ -1,3 +1,4 @@
+import type { ZodType } from "zod";
 import { describe, expect, it } from "vitest";
 import { CLAIMS, CLIENTS, DOCUMENTS, PEOPLE } from "../../fixtures/demo-workspace";
 import { createContext, createStubLlm } from "../../testing";
@@ -99,7 +100,7 @@ describe("regulation-watch on the demo workspace (stub LLM)", () => {
     expect(r?.summary).toContain("RSZ");
     expect(r?.actions?.find((a) => a.type === "review-document")?.url).toMatch(/^https:\/\//);
     expect(r?.actions?.find((a) => a.type === "ask-expert")?.personId).toBe("p-tom");
-    expect(r?.details?.llmSummary).toBe(false);
+    expect(r?.details?.llmJudged).toBeUndefined();
   });
 
   it("flags c8 (indexation, BE, JC 118) as expiring with the January 2026 indexation", async () => {
@@ -115,28 +116,68 @@ describe("regulation-watch on the demo workspace (stub LLM)", () => {
     for (const id of ["c1", "c3", "c4", "c7"]) expect(m.has(id)).toBe(false);
   });
 
-  it("uses the LLM sentence when the model returns one, and never throws when it fails", async () => {
+  it("uses the LLM judgement when the model returns one, and never throws when it fails", async () => {
     const talkative = createContext({
       workspaceId: "ws-demo",
       people: PEOPLE,
-      llm: createStubLlm({ generateText: async () => "The 8.91 EUR cap since 2026-01-01 makes the 7 euro figure stale." }),
+      llm: createStubLlm({
+        generateJson: async <T,>(schema: ZodType<T>) =>
+          schema.parse({ relation: "unclear", summary: "The 8.91 EUR cap since 2026-01-01 may make the 7 euro figure stale." }),
+      }),
     });
     const c2 = CLAIMS.find((c) => c.id === "c2")!;
     const [r] = await regulationWatch.evaluate([c2], talkative);
-    expect(r.summary).toBe("The 8.91 EUR cap since 2026-01-01 makes the 7 euro figure stale.");
-    expect(r.details?.llmSummary).toBe(true);
+    expect(r.summary).toBe("The 8.91 EUR cap since 2026-01-01 may make the 7 euro figure stale.");
+    expect(r.verdict).toBe("expiring");
+    expect(r.details?.llmJudged).toBe("unclear");
 
     const broken = createContext({
       workspaceId: "ws-demo",
-      llm: createStubLlm({ generateText: async () => { throw new Error("provider down"); } }),
+      llm: createStubLlm({ generateJson: async () => { throw new Error("provider down"); } }),
     });
     const [f] = await regulationWatch.evaluate([c2], broken);
     expect(f.verdict).toBe("expiring");
-    expect(f.details?.llmSummary).toBe(false);
+    expect(f.details?.llmJudged).toBeUndefined();
   });
 
   it("ignores claims from another workspace", async () => {
     const c2 = { ...CLAIMS.find((c) => c.id === "c2")!, workspaceId: "ws-other" };
     expect(await regulationWatch.evaluate([c2], ctx)).toHaveLength(0);
+  });
+});
+
+describe("regulation-watch with an LLM judgement", () => {
+  const c8 = CLAIMS.find((c) => c.id === "c8")!;
+  const withRelation = (relation: string) =>
+    createContext({
+      workspaceId: "ws-demo",
+      documents: DOCUMENTS,
+      clients: CLIENTS,
+      people: PEOPLE,
+      llm: createStubLlm({
+        generateJson: async <T,>(schema: ZodType<T>) =>
+          schema.parse({ relation, summary: "The January 2026 indexation listed by the FPS fiche applies since 2026-01-01." }),
+      }),
+    });
+
+  it("turns 'supports' into confirmed", async () => {
+    const [r] = await regulationWatch.evaluate([c8], withRelation("supports"));
+    expect(r?.verdict).toBe("confirmed");
+    expect(r?.details?.llmJudged).toBe("supports");
+  });
+
+  it("turns 'contradicts' on an in-force change into outdated", async () => {
+    const [r] = await regulationWatch.evaluate([c8], withRelation("contradicts"));
+    expect(r?.verdict).toBe("outdated");
+  });
+
+  it("drops the result when the change is unrelated", async () => {
+    expect(await regulationWatch.evaluate([c8], withRelation("unrelated"))).toHaveLength(0);
+  });
+
+  it("keeps the deterministic expiring verdict when the LLM answer is unusable", async () => {
+    const [r] = await regulationWatch.evaluate([c8], withRelation("nonsense"));
+    expect(r?.verdict).toBe("expiring");
+    expect(r?.details?.llmJudged).toBeUndefined();
   });
 });

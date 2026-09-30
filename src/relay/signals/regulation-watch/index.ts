@@ -1,4 +1,6 @@
+import { z } from "zod";
 import type {
+  Verdict,
   Claim,
   Evidence,
   LegalAnchor,
@@ -73,11 +75,22 @@ function deterministicSummary(notice: RegulationNotice, claim: Claim, now: Date)
  * Optional LLM refinement. Returns undefined with the stub (empty text), on error,
  * or when the model answers with something that is not one usable sentence.
  */
-async function llmSummary(
+const JudgementSchema = z.object({
+  relation: z.enum(["contradicts", "supports", "unrelated", "unclear"]),
+  summary: z.string().min(20).max(400),
+});
+
+export type NoticeRelation = z.infer<typeof JudgementSchema>["relation"];
+
+/**
+ * Asks the LLM how the notice relates to the claim. Returns undefined when no LLM
+ * is available or the answer is unusable, so the deterministic path takes over.
+ */
+async function llmJudge(
   ctx: SignalContext,
   notice: RegulationNotice,
   claim: Claim,
-): Promise<string | undefined> {
+): Promise<{ relation: NoticeRelation; summary: string } | undefined> {
   try {
     const prompt = [
       "A payroll consultant said the following about a client:",
@@ -87,23 +100,27 @@ async function llmSummary(
       `Summary: ${notice.summary}`,
       `Effective from: ${notice.effectiveFrom}`,
       `Source: ${notice.source.name}`,
-      "In ONE plain sentence, say whether and how this change affects the claim. Name the change, the source and the effective date. No preamble.",
+      "",
+      'Classify the relation: "contradicts" if the change makes the claim wrong or out of date as stated; "supports" if the change confirms what the claim says; "unrelated" if the change does not affect what the claim states; "unclear" if it might and a human should check.',
+      'Then write ONE plain sentence for the consultant that names the change, the source and the effective date. Return JSON: {"relation": ..., "summary": ...}.',
     ].join("\n");
-    const text = await ctx.llm.generateText(prompt, "You are a Belgian payroll expert. Answer in one sentence.");
-    const line = text.trim().split("\n").find((l) => l.trim().length > 0)?.trim();
-    if (!line || line.length < 20) return undefined;
-    return line.length > 300 ? `${line.slice(0, 297)}...` : line;
+    const out = await ctx.llm.generateJson(JudgementSchema, prompt, "You are a Belgian payroll expert.");
+    const summary = out.summary.trim().split("\n").find((l) => l.trim().length > 0)?.trim() ?? "";
+    if (summary.length < 20) return undefined;
+    return { relation: out.relation, summary: summary.length > 300 ? `${summary.slice(0, 297)}...` : summary };
   } catch (e) {
-    ctx.log(`regulation-watch: llm summary failed for ${claim.id}: ${e instanceof Error ? e.message : String(e)}`);
+    ctx.log(`regulation-watch: llm judgement failed for ${claim.id}: ${e instanceof Error ? e.message : String(e)}`);
     return undefined;
   }
 }
 
 /**
  * Deterministic matching of claim anchors against a feed of regulation notices.
- * Without an LLM the signal cannot tell whether a change contradicts the claim or
- * merely touches its subject, so a matching notice yields `expiring` ("a change
- * applies or is coming; verify the claim against it"), never `outdated` on its own.
+ * With an LLM the notice is judged against the claim: contradicts → outdated (or
+ * expiring when the change is still upcoming), supports → confirmed, unrelated →
+ * no result. Without an LLM the signal cannot tell whether a change contradicts the
+ * claim or merely touches its subject, so a matching notice yields `expiring`
+ * ("a change applies or is coming; verify the claim against it").
  * Build with a custom feed for tests; the default uses REGULATION_FEED.
  */
 export function createRegulationWatch(feed: RegulationNotice[] = REGULATION_FEED): TrustSignal {
@@ -117,11 +134,12 @@ export function createRegulationWatch(feed: RegulationNotice[] = REGULATION_FEED
     weight: 1,
 
     async evaluate(claims: Claim[], ctx: SignalContext): Promise<SignalResult[]> {
-      const results: SignalResult[] = [];
-      for (const claim of claims) {
+      const signalId = this.id;
+      const judgedAll = await Promise.all(
+        claims.map(async (claim): Promise<SignalResult | undefined> => {
         try {
-          if (claim.workspaceId !== ctx.workspaceId) continue;
-          if (!claim.anchors || claim.anchors.length === 0) continue;
+          if (claim.workspaceId !== ctx.workspaceId) return undefined;
+          if (!claim.anchors || claim.anchors.length === 0) return undefined;
 
           const matched = new Map<string, { notice: RegulationNotice; anchor: LegalAnchor }>();
           for (const anchor of claim.anchors) {
@@ -129,7 +147,7 @@ export function createRegulationWatch(feed: RegulationNotice[] = REGULATION_FEED
               if (!matched.has(notice.id) && anchorMatches(anchor, notice)) matched.set(notice.id, { notice, anchor });
             }
           }
-          if (matched.size === 0) continue;
+          if (matched.size === 0) return undefined;
 
           const ranked = rank([...matched.values()].map((m) => m.notice), ctx.now);
           const primary = ranked.at(0)!;
@@ -150,14 +168,25 @@ export function createRegulationWatch(feed: RegulationNotice[] = REGULATION_FEED
           if (expert) actions.push({ type: "ask-expert", label: `Ask ${expert.name}`, personId: expert.id });
 
           const fallback = deterministicSummary(primary, claim, ctx.now);
-          const refined = await llmSummary(ctx, primary, claim);
+          const judged = await llmJudge(ctx, primary, claim);
+          if (judged?.relation === "unrelated") return undefined;
 
-          results.push({
-            signalId: this.id,
+          let verdict: Verdict = "expiring";
+          let confidence = inForce ? CONFIDENCE_APPLIED : CONFIDENCE_UPCOMING;
+          if (judged?.relation === "contradicts") {
+            verdict = inForce ? "outdated" : "expiring";
+            confidence = CONFIDENCE_APPLIED;
+          } else if (judged?.relation === "supports") {
+            verdict = "confirmed";
+            confidence = CONFIDENCE_UPCOMING;
+          }
+
+          return {
+            signalId,
             claimId: claim.id,
-            verdict: "expiring",
-            confidence: inForce ? CONFIDENCE_APPLIED : CONFIDENCE_UPCOMING,
-            summary: refined ?? fallback,
+            verdict,
+            confidence,
+            summary: judged?.summary ?? fallback,
             evidence,
             actions,
             details: {
@@ -168,14 +197,17 @@ export function createRegulationWatch(feed: RegulationNotice[] = REGULATION_FEED
               inForce,
               verified: primary.verified !== false,
               anchorTopic: anchor.topic,
-              llmSummary: refined !== undefined,
+              llmJudged: judged?.relation,
               deterministicSummary: fallback,
             },
-          });
+          };
         } catch (e) {
           ctx.log(`regulation-watch: skipped ${claim.id}: ${e instanceof Error ? e.message : String(e)}`);
+          return undefined;
         }
-      }
+        }),
+      );
+      const results = judgedAll.filter((r): r is SignalResult => r !== undefined);
       return results;
     },
   };

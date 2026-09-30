@@ -31,6 +31,14 @@ describe("consolidateClaim", () => {
     expect(t.score).toBeLessThan(0.5);
   });
 
+  it("lets a confirmation with evidence beat 'no evidence found'", () => {
+    const t = consolidateClaim("c1", [
+      result({ signalId: "a", verdict: "unsupported", confidence: 0.6 }),
+      result({ signalId: "b", verdict: "confirmed", confidence: 0.7 }),
+    ]);
+    expect(t.verdict).toBe("confirmed");
+  });
+
   it("ignores results for other claims", () => {
     const t = consolidateClaim("c1", [result({ claimId: "c2", verdict: "contradicted" })]);
     expect(t.verdict).toBe("unknown");

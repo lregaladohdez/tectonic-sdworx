@@ -454,14 +454,14 @@ export const documentEvidence: TrustSignal = {
     const corpusTokens = new Set(bags.flatMap((b) => [...b.tokens]));
     const vectors = await tryEmbed(own, passages, ctx);
 
-    const results: SignalResult[] = [];
     const llmFailures: { claimId: string; message: string }[] = [];
-    for (const [i, claim] of own.entries()) {
-      try {
+    const judged = await Promise.all(
+      own.map(async (claim, i): Promise<SignalResult | undefined> => {
+        try {
         const claimBag = tokenise(claim.text);
         if (claimBag.tokens.size === 0) {
           ctx.log(`document-evidence: claim ${claim.id} has no content to match on, skipped`);
-          continue;
+          return undefined;
         }
         const ranked = rankPassages(claim, claimBag, passages, bags, vectors?.claims[i], vectors?.passages);
 
@@ -482,7 +482,7 @@ export const documentEvidence: TrustSignal = {
                 effectiveDate: ranked[idx].document.updatedAt,
               }));
 
-        results.push({
+        return {
           signalId: this.id,
           claimId: claim.id,
           verdict,
@@ -502,11 +502,14 @@ export const documentEvidence: TrustSignal = {
               ...(p.cosine === undefined ? {} : { cosine: Number(p.cosine.toFixed(3)) }),
             })),
           },
-        });
+        };
       } catch (e) {
         ctx.log(`document-evidence: skipped claim ${claim.id}: ${brief(e)}`);
+        return undefined;
       }
-    }
+      }),
+    );
+    const results = judged.filter((r): r is SignalResult => r !== undefined);
     if (llmFailures.length > 0) {
       ctx.log(
         `document-evidence: LLM judgement unavailable (${llmFailures[0].message}); deterministic judge used for ${llmFailures.map((f) => f.claimId).join(", ")}`,
