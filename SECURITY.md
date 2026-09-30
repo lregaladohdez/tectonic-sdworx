@@ -51,6 +51,22 @@ consolidation logic (`npm test`).
 3. Fix or document each finding, mark it resolved, re-run, screenshot again.
 4. Keep both screenshots for the Builderbase submission.
 
+### Aikido AI Code Audit
+
+The AI Code Audit is Aikido's AI pentest: it reads the repository and reasons about
+authentication, authorisation, IDOR and business logic, not just dependencies. It is
+separate from the GitHub App check that runs on pull requests, and only the account owner
+can start it from the Aikido web UI. The security grade (10%) is based on the issues that
+remain after it.
+
+The baseline run is taken on `main` at the commit intended for submission, on or just after
+30 Sep 2026, before any fixes prompted by the audit. Its screenshot is saved as
+`docs/aikido/before.png`. Each finding is then fixed, or documented under "Known gaps" above
+when it is accepted hackathon scope, and marked resolved in Aikido. The audit is re-run on
+the fixed commit and that screenshot is saved as `docs/aikido/after.png`. Both are added by
+hand and committed before the Builderbase form is submitted; the step-by-step instructions
+are in [docs/aikido/README.md](docs/aikido/README.md).
+
 ## Dependency overrides
 
 `package.json` carries three `overrides` that pin transitive packages to patched releases:

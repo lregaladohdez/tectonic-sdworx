@@ -14,6 +14,22 @@ board** where each statement carries its verdict, the verbatim evidence behind i
 human action it needs. Nothing is hidden behind a black box: every verdict links to a
 passage, a regulation or a person. Accepted claims become the **verified client brief**.
 
+## Submission
+
+| What | Where |
+| --- | --- |
+| Live demo | <https://tectonic-sdworx-970554784378.europe-west1.run.app>, sign in as `incoming@relay.demo` (passcode shared with the jury separately) |
+| Demo video (under 3 minutes) | VIDEO_URL_TBD |
+| Repository | <https://github.com/lregaladohdez/tectonic-sdworx> |
+| Builderbase copy sheet | [docs/SUBMISSION.md](docs/SUBMISSION.md) |
+
+Aikido AI Code Audit, before and after fixing (the two PNGs are added by hand after the
+audit runs; steps in [docs/aikido/README.md](docs/aikido/README.md)):
+
+![Aikido AI Code Audit, before](docs/aikido/before.png)
+
+![Aikido AI Code Audit, after](docs/aikido/after.png)
+
 ## What the demo shows
 
 A seeded workspace with three fictional Belgian clients changing hands in one payroll team:
@@ -110,7 +126,7 @@ npm run typecheck && npm run lint && npm run build
 | `src/lib/ai/`                                 | OpenAI, Google (Gemini API or Vertex), ElevenLabs clients; `llm.ts` picks and falls back |
 | `src/components/relay/`                       | Claim card, status badge, actions, shell, login form                             |
 | `src/remotion/`, `scripts/voice-*.ts`, `scripts/music-bed.ts` | Demo video tooling (title cards, per-scene voice-over, music bed) |
-| `docs/`                                       | [signals.md](docs/signals.md), [STYLE.md](docs/STYLE.md), [VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md) |
+| `docs/`                                       | [signals.md](docs/signals.md), [STYLE.md](docs/STYLE.md), [VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md), [SUBMISSION.md](docs/SUBMISSION.md), [aikido/](docs/aikido/README.md) |
 
 ## API
 
@@ -225,6 +241,8 @@ The submission video is scripted in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md)
 | `npm run music:bed`         | Generates the instrumental bed with ElevenLabs Music                       |
 | `npm run remotion:studio`   | Remotion Studio for the title cards (`PromoVideo` composition)             |
 | `npm run remotion:render`   | Renders `PromoVideo` to `out/PromoVideo.mp4`                               |
+| `npm run video:record`      | Records the app footage for the demo with Playwright                       |
+| `npm run video:render`      | Renders the `DemoVideo` composition to `out/relay-demo.mp4`                |
 
 ## Unfinished, on purpose
 
